@@ -142,7 +142,9 @@
         // --- PWA Service Worker Registration ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js') // Assuming sw.js is in the root
+                // Use a relative path for sw.js, assuming it's in the same directory as index.html
+                // or at the root of your GitHub Pages deployment.
+                navigator.serviceWorker.register('sw.js') 
                     .then(registration => {
                         console.log('ServiceWorker registration successful with scope: ', registration.scope);
                     })
@@ -310,19 +312,15 @@
 
         function handleDragStart(e) {
             draggedItem = e.target.closest('.day-card');
-            // The dayIndex on the card is its current visual index in activeWorkoutPlan.
-            // We need to find its corresponding index in initialBasePlan by dayName.
             const dayNameToDrag = draggedItem.dataset.dayName;
             draggedItemOriginalIndexInBasePlan = initialBasePlan.findIndex(d => d.dayName === dayNameToDrag);
 
             if (draggedItemOriginalIndexInBasePlan === -1) {
                 console.error("Could not find dragged item in base plan:", dayNameToDrag);
-                e.preventDefault(); // Prevent drag if data is inconsistent
+                e.preventDefault(); 
                 return;
             }
-
             e.dataTransfer.effectAllowed = 'move';
-            // It's good practice to set some data, though not strictly used by this simple reorder logic
             e.dataTransfer.setData('text/plain', dayNameToDrag); 
             setTimeout(() => { draggedItem.classList.add('dragging'); }, 0);
         }
@@ -361,37 +359,31 @@
                 return;
             }
             
-            // Reorder initialBasePlan (template)
             const itemToMoveInBase = initialBasePlan.splice(draggedItemOriginalIndexInBasePlan, 1)[0];
             initialBasePlan.splice(targetIndexInBasePlan, 0, itemToMoveInBase);
-            saveBasePlan(); // Save the reordered template
+            saveBasePlan(); 
 
-            // If current week is being viewed, reorder its data too
             if (selectedWeekToDisplayId === currentCalendarWeekId) {
                 const currentWeekHistorical = historicalData[currentCalendarWeekId];
                 const newOrderedCurrentWeekHistorical = [];
-                
-                initialBasePlan.forEach(templateDay => { // Iterate over the NEW order of the base plan
+                initialBasePlan.forEach(templateDay => { 
                     const correspondingDayInHistory = currentWeekHistorical.find(histDay => histDay.dayName === templateDay.dayName);
                     if (correspondingDayInHistory) {
                         newOrderedCurrentWeekHistorical.push(correspondingDayInHistory);
                     } else {
                         console.warn(`Day ${templateDay.dayName} not in current history during reorder. Using template day.`);
                         let newDayFromTemplate = JSON.parse(JSON.stringify(templateDay));
-                        // If this newly ordered day is Thursday, set up its A/B exercises
-                        if (newDayFromTemplate.dayName === "Thursday") {
+                        if (newDayFromTemplate.dayName === "Thursday") { // Check if the *moved* day is now Thursday
                             setupAlternatingWorkoutForWeek([newDayFromTemplate], currentCalendarWeekId, "Thursday");
                         }
                         newOrderedCurrentWeekHistorical.push(newDayFromTemplate);
                     }
                 });
-                
                 historicalData[currentCalendarWeekId] = newOrderedCurrentWeekHistorical;
                 activeWorkoutPlan = JSON.parse(JSON.stringify(historicalData[currentCalendarWeekId]));
                 saveHistoricalDataToStorage();
             }
-            
-            renderApp(); // Re-render the entire app
+            renderApp(); 
             showAlert('Day order updated in template.', 'success');
         }
 
@@ -405,15 +397,15 @@
         function renderWeekSchedule(planToRender) {
             ui.weekSchedule.innerHTML = '';
             if (!planToRender || planToRender.length === 0) { ui.weekSchedule.innerHTML = '<p>No plan.</p>'; return; }
-            planToRender.forEach((day, index) => { // index here is the current visual index
+            planToRender.forEach((day, index) => { 
                 const dayCard = document.createElement('div');
                 dayCard.className = `day-card bg-white p-6 rounded-lg shadow-md ${day.type === 'Rest' ? 'bg-gray-100' : 'hover:bg-blue-50'}`;
                 dayCard.setAttribute('draggable', true);
-                dayCard.dataset.dayIndex = index; // Current visual index
-                dayCard.dataset.dayName = day.dayName; // Crucial for mapping back to basePlan during drag
+                dayCard.dataset.dayIndex = index; 
+                dayCard.dataset.dayName = day.dayName; 
 
                 let title = day.workoutTitle;
-                if (day.dayName === "Thursday") { // The alternating day
+                if (day.dayName === "Thursday") { 
                      const thursInPlan = planToRender.find(d => d.dayName === "Thursday");
                      if(thursInPlan) title = thursInPlan.workoutTitle;
                 }
@@ -439,7 +431,7 @@
         }
 
 
-        function renderWorkoutDetails(dayIndex) { /* ... same as before, corrected YouTube link ... */
+        function renderWorkoutDetails(dayIndex) { /* ... same as before ... */
             if (dayIndex < 0 || dayIndex >= activeWorkoutPlan.length) { showAlert('Invalid day.', 'error'); ui.detailsContainer.classList.add('hidden'); return; }
             const day = activeWorkoutPlan[dayIndex];
             ui.dayTitle.textContent = day.dayName;
@@ -451,7 +443,6 @@
                 day.exercises.forEach(exercise => {
                     const exerciseDiv = document.createElement('div');
                     exerciseDiv.className = 'exercise-card bg-gray-50 p-4 rounded-md shadow-sm';
-                    // Corrected YouTube search link
                     const videoLink = `https://www.youtube.com/results?search_query=${encodeURIComponent(exercise.videoSearchQuery)}`;
                     exerciseDiv.innerHTML = `
                         <div class="flex justify-between items-center mb-2">

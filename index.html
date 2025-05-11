@@ -1,634 +1,626 @@
-{\rtf1\ansi\ansicpg1252\cocoartf2822
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;}
-{\*\expandedcolortbl;;}
-\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
-\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Tracker - PWA</title>
+    <meta name="theme-color" content="#3b82f6"/> <link rel="manifest" href="manifest.json"> <link rel="apple-touch-icon" href="icons/icon-192x192.png"> <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .day-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            position: relative;
+            cursor: grab; /* Indicate draggable */
+        }
+        .day-card:active { cursor: grabbing; }
+        .day-card.dragging { opacity: 0.5; border: 2px dashed #3b82f6; transform: scale(0.95); }
+        .day-card.drag-over { border: 2px dashed #22c55e; /* Green border when dragging over */ }
+        .day-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
+        .exercise-card { border-left: 4px solid #3b82f6; }
+        .weight-input { width: 100px; padding: 8px; border: 1px solid #d1d5db; border-radius: 0.375rem; text-align: center; }
+        .weight-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.4); }
+        .weight-input:disabled { background-color: #e5e7eb; cursor: not-allowed; }
+        .info-icon, .edit-day-icon { cursor: pointer; color: #6b7280; }
+        .info-icon:hover, .edit-day-icon:hover { color: #3b82f6; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fff; margin: 5% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .modal-content-lg { max-width: 800px; }
+        .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .close-button:hover, .close-button:focus { color: black; text-decoration: none; cursor: pointer; }
+        .exercise-details-container::-webkit-scrollbar, .exercise-edit-list::-webkit-scrollbar { width: 8px; }
+        .exercise-details-container::-webkit-scrollbar-track, .exercise-edit-list::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .exercise-details-container::-webkit-scrollbar-thumb, .exercise-edit-list::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        .exercise-details-container::-webkit-scrollbar-thumb:hover, .exercise-edit-list::-webkit-scrollbar-thumb:hover { background: #555; }
+        #weekSelector { padding: 0.5rem 1rem; border-radius: 0.375rem; border: 1px solid #d1d5db; background-color: white; margin-bottom: 1rem; min-width: 200px; }
+        .form-input, .form-select, .form-textarea {
+            width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;
+            box-shadow: sm; font-size: 0.875rem;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.4);
+        }
+        .edit-day-icon-container { position: absolute; top: 10px; right: 10px; z-index: 10; }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="mb-6 text-center">
+            <h1 class="text-4xl font-bold text-gray-700">My Workout Tracker</h1>
+            <p class="text-lg text-gray-500 mt-2">Customize your schedule and track progress weekly!</p>
+        </header>
 
-\f0\fs24 \cf0 <!DOCTYPE html>\
-<html lang="en">\
-<head>\
-    <meta charset="UTF-8">\
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">\
-    <title>Workout Tracker - PWA</title>\
-    <meta name="theme-color" content="#3b82f6"/> <link rel="manifest" href="manifest.json"> <link rel="apple-touch-icon" href="icons/icon-192x192.png"> <script src="https://cdn.tailwindcss.com"></script>\
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\
-    <style>\
-        body \{ font-family: 'Inter', sans-serif; background-color: #f3f4f6; \}\
-        .day-card \{\
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;\
-            position: relative;\
-            cursor: grab; /* Indicate draggable */\
-        \}\
-        .day-card:active \{ cursor: grabbing; \}\
-        .day-card.dragging \{ opacity: 0.5; border: 2px dashed #3b82f6; transform: scale(0.95); \}\
-        .day-card.drag-over \{ border: 2px dashed #22c55e; /* Green border when dragging over */ \}\
-        .day-card:hover \{ transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); \}\
-        .exercise-card \{ border-left: 4px solid #3b82f6; \}\
-        .weight-input \{ width: 100px; padding: 8px; border: 1px solid #d1d5db; border-radius: 0.375rem; text-align: center; \}\
-        .weight-input:focus \{ outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.4); \}\
-        .weight-input:disabled \{ background-color: #e5e7eb; cursor: not-allowed; \}\
-        .info-icon, .edit-day-icon \{ cursor: pointer; color: #6b7280; \}\
-        .info-icon:hover, .edit-day-icon:hover \{ color: #3b82f6; \}\
-        .modal \{ display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); \}\
-        .modal-content \{ background-color: #fff; margin: 5% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); \}\
-        .modal-content-lg \{ max-width: 800px; \}\
-        .close-button \{ color: #aaa; float: right; font-size: 28px; font-weight: bold; \}\
-        .close-button:hover, .close-button:focus \{ color: black; text-decoration: none; cursor: pointer; \}\
-        .exercise-details-container::-webkit-scrollbar, .exercise-edit-list::-webkit-scrollbar \{ width: 8px; \}\
-        .exercise-details-container::-webkit-scrollbar-track, .exercise-edit-list::-webkit-scrollbar-track \{ background: #f1f1f1; border-radius: 10px; \}\
-        .exercise-details-container::-webkit-scrollbar-thumb, .exercise-edit-list::-webkit-scrollbar-thumb \{ background: #888; border-radius: 10px; \}\
-        .exercise-details-container::-webkit-scrollbar-thumb:hover, .exercise-edit-list::-webkit-scrollbar-thumb:hover \{ background: #555; \}\
-        #weekSelector \{ padding: 0.5rem 1rem; border-radius: 0.375rem; border: 1px solid #d1d5db; background-color: white; margin-bottom: 1rem; min-width: 200px; \}\
-        .form-input, .form-select, .form-textarea \{\
-            width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;\
-            box-shadow: sm; font-size: 0.875rem;\
-        \}\
-        .form-input:focus, .form-select:focus, .form-textarea:focus \{\
-            outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.4);\
-        \}\
-        .edit-day-icon-container \{ position: absolute; top: 10px; right: 10px; z-index: 10; \}\
-    </style>\
-</head>\
-<body class="antialiased text-gray-800">\
-    <div class="container mx-auto p-4 md:p-8">\
-        <header class="mb-6 text-center">\
-            <h1 class="text-4xl font-bold text-gray-700">My Workout Tracker</h1>\
-            <p class="text-lg text-gray-500 mt-2">Customize your schedule and track progress weekly!</p>\
-        </header>\
-\
-        <div class="mb-6 flex flex-col sm:flex-row justify-center items-center gap-4">\
-            <label for="weekSelector" class="text-gray-600 font-medium">View Week:</label>\
-            <select id="weekSelector"></select>\
-            <button id="resetCurrentWeekData" class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 text-sm">Reset Current Week's Weights to Template</button>\
-        </div>\
-        <div id="currentWeekInfo" class="text-center text-sm text-gray-500 mb-4"></div>\
-        <div id="alert-container" class="mb-4"></div>\
-\
-        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8" id="week-schedule">\
-            </div>\
-\
-        <div id="workout-details-container" class="bg-white p-6 rounded-lg shadow-lg hidden">\
-            <h2 id="workout-day-title" class="text-2xl font-semibold mb-1 text-gray-700"></h2>\
-            <p id="workout-type-subtitle" class="text-md text-gray-500 mb-6"></p>\
-            <div id="exercise-list" class="space-y-6 exercise-details-container max-h-[60vh] overflow-y-auto pr-2"></div>\
-        </div>\
-\
-        <div id="infoModal" class="modal">\
-            <div class="modal-content">\
-                <span class="close-button" onclick="closeModal('infoModal')">\'d7</span>\
-                <h3 id="modal-exercise-name" class="text-xl font-semibold mb-3"></h3>\
-                <p id="modal-exercise-focus" class="text-gray-600 whitespace-pre-line"></p>\
-            </div>\
-        </div>\
-\
-        <div id="dayEditModal" class="modal">\
-            <div class="modal-content">\
-                <span class="close-button" onclick="closeModal('dayEditModal')">\'d7</span>\
-                <h3 class="text-xl font-semibold mb-4">Edit Day Structure (<span id="editModalDayName"></span>)</h3>\
-                <input type="hidden" id="editingDayIndex">\
-                <div class="space-y-4">\
-                    <div>\
-                        <label for="editDayWorkoutTitle" class="block text-sm font-medium text-gray-700">Workout Title:</label>\
-                        <input type="text" id="editDayWorkoutTitle" class="form-input">\
-                    </div>\
-                    <div>\
-                        <label for="editDayType" class="block text-sm font-medium text-gray-700">Workout Type:</label>\
-                        <select id="editDayType" class="form-select">\
-                            <option value="Strength">Strength</option>\
-                            <option value="Cardio/Recovery">Cardio/Recovery</option>\
-                            <option value="Active Recovery">Active Recovery</option>\
-                            <option value="Rest">Rest</option>\
-                        </select>\
-                    </div>\
-                    <div id="editDayDetailsContainer">\
-                        <label for="editDayDetails" class="block text-sm font-medium text-gray-700">Details:</label>\
-                        <textarea id="editDayDetails" rows="3" class="form-textarea"></textarea>\
-                    </div>\
-                    <div id="editStrengthDayOptionsContainer" class="hidden">\
-                         <p class="text-sm text-gray-600 mb-2">For 'Strength' type, manage exercises below. The title can be 'Full Body Strength A', 'Full Body Strength B', or custom.</p>\
-                        <button id="manageExercisesBtn" class="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Edit Exercises for this Day</button>\
-                    </div>\
-                </div>\
-                <div class="mt-6 flex justify-end">\
-                    <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="saveDayStructureChanges()">Save Changes to Template</button>\
-                </div>\
-            </div>\
-        </div>\
-\
-        <div id="exerciseEditModal" class="modal">\
-            <div class="modal-content modal-content-lg">\
-                <span class="close-button" onclick="closeModal('exerciseEditModal')">\'d7</span>\
-                <h3 class="text-xl font-semibold mb-4">Edit Exercises for <span id="exerciseEditModalDayTitle"></span></h3>\
-                <input type="hidden" id="editingExercisesForDayIndex">\
-                <div id="exercise-edit-list" class="space-y-3 mb-4 max-h-[40vh] overflow-y-auto p-1"></div>\
-                <button id="addNewExerciseBtn" class="mb-4 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 text-sm">Add New Exercise to this Day</button>\
-                <div id="addEditExerciseFormContainer" class="hidden bg-gray-50 p-4 rounded-md">\
-                     <h4 class="text-md font-semibold mb-2" id="exerciseFormTitle">Add New Exercise</h4>\
-                     <input type="hidden" id="editingExerciseInternalId"> <div class="grid grid-cols-1 md:grid-cols-2 gap-4">\
-                        <div><label class="block text-sm">Name:</label><input type="text" id="exFormName" class="form-input"></div>\
-                        <div><label class="block text-sm">Sets:</label><input type="text" id="exFormSets" class="form-input"></div>\
-                        <div><label class="block text-sm">Reps:</label><input type="text" id="exFormReps" class="form-input"></div>\
-                        <div><label class="block text-sm">Initial Weight (kg) (0 if N/A):</label><input type="number" id="exFormWeight" class="form-input" value="0" step="0.5"></div>\
-                     </div>\
-                     <div class="mt-3"><label class="block text-sm">Focus Points:</label><textarea id="exFormFocus" class="form-textarea" rows="2"></textarea></div>\
-                     <div class="mt-3"><label class="block text-sm">Video Search Query:</label><input type="text" id="exFormVideoQuery" class="form-input"></div>\
-                     <div class="mt-4 flex gap-2">\
-                        <button id="saveExerciseDetailBtn" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm">Save Exercise</button>\
-                        <button id="cancelExerciseDetailBtn" type="button" class="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm">Cancel</button>\
-                     </div>\
-                </div>\
-                <div class="mt-6 flex justify-end">\
-                    <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="closeModal('exerciseEditModal')">Done Editing Exercises</button>\
-                </div>\
-            </div>\
-        </div>\
-    </div>\
-\
-    <script>\
-        // --- PWA Service Worker Registration ---\
-        if ('serviceWorker' in navigator) \{\
-            window.addEventListener('load', () => \{\
-                navigator.serviceWorker.register('/sw.js') // Assuming sw.js is in the root\
-                    .then(registration => \{\
-                        console.log('ServiceWorker registration successful with scope: ', registration.scope);\
-                    \})\
-                    .catch(error => \{\
-                        console.log('ServiceWorker registration failed: ', error);\
-                    \});\
-            \});\
-        \}\
-\
-        // --- ISO WEEK CALCULATION ---\
-        Date.prototype.getISOWeek = function() \{ var date = new Date(this.getTime()); date.setHours(0, 0, 0, 0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); var week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7); \}\
-        Date.prototype.getISOWeekYear = function() \{ var date = new Date(this.getTime()); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); return date.getFullYear(); \}\
-        function getCurrentWeekId() \{ const now = new Date(); return `$\{now.getISOWeekYear()\}-W$\{String(now.getISOWeek()).padStart(2, '0')\}`; \}\
-\
-        // --- DATA INITIALIZATION --- (Sunday as first exercise day)\
-        let initialBasePlan = [\
-            \{ dayName: "Sunday", workoutTitle: "Full Body Strength A", type: "Strength", exercises: [\
-                    \{ id: "sun_chest_press", name: "Machine Chest Press", sets: "2-3", reps: "10-15", weight: 0, focus: "Keep head and entire back flat against the pad. Neutral neck position. Exhale on press, inhale on return. Avoid arching your lower back.", videoSearchQuery: "Machine Chest Press form" \},\
-                    \{ id: "sun_seated_row", name: "Seated Cable Row", sets: "2-3", reps: "10-15", weight: 0, focus: "Keep spine neutral. Squeeze shoulder blades together. Control movement in both directions. Keep neck in line with spine.", videoSearchQuery: "Seated Cable Row form" \},\
-                    \{ id: "sun_leg_press", name: "Leg Press Machine", sets: "2-3", reps: "10-15", weight: 0, focus: "Do NOT let lower back round or lift off pad. Knees track with toes. Control descent. Limit range of motion to avoid knee pain (e.g., no more than 90-degree knee bend if uncomfortable).", videoSearchQuery: "Leg Press form safe for back and knees" \},\
-                    \{ id: "sun_lat_raises", name: "Dumbbell Lateral Raises (Seated)", sets: "2-3", reps: "10-15", weight: 0, focus: "Sit with good posture. Neck relaxed. Raise arms to shoulder height only, slight bend in elbows. Control up and down. Avoid shrugging.", videoSearchQuery: "Seated Dumbbell Lateral Raise form" \},\
-                    \{ id: "sun_bicep_curls", name: "Bicep Curl Machine or Seated Dumbbell Curls", sets: "2-3", reps: "10-15", weight: 0, focus: "Back straight and supported. Avoid momentum. Control curl and extension. Wrists neutral.", videoSearchQuery: "Machine Bicep Curl form OR Seated Dumbbell Bicep Curl form" \},\
-                    \{ id: "sun_triceps_pushdown", name: "Triceps Pushdown (Cable)", sets: "2-3", reps: "10-15", weight: 0, focus: "Elbows tucked. Stand tall, core engaged. Only forearms move. Neck neutral.", videoSearchQuery: "Triceps Pushdown rope form" \},\
-                    \{ id: "sun_plank", name: "Plank", sets: "2-3", reps: "20-60s hold", weight: null, focus: "Straight line head to heels (or knees). Engage abs & glutes. Don't let hips sag. Neck in line with spine. Breathe.", videoSearchQuery: "Plank exercise form" \}\
-                ]\
-            \},\
-            \{ dayName: "Monday", workoutTitle: "Swimming + Sauna", type: "Cardio/Recovery", details: "Focus on low-impact cardio. Gentle strokes for swimming (freestyle with snorkel if neck sensitive, backstroke). Water walking/jogging also good. Sauna: 5-15 mins, listen to body, hydrate well." \},\
-            \{ dayName: "Tuesday", workoutTitle: "Full Body Strength B", type: "Strength", exercises: [\
-                    \{ id: "tue_pec_deck", name: "Pec Deck Machine (Butterfly)", sets: "2-3", reps: "10-15", weight: 0, focus: "Back flat against pad. Handles/pads at chest level. Control movement. Avoid overstretching. Neck neutral.", videoSearchQuery: "Pec Deck Machine form" \},\
-                    \{ id: "tue_lat_pulldown", name: "Lat Pulldown (to FRONT)", sets: "2-3", reps: "10-15", weight: 0, focus: "Grip slightly wider than shoulders. Chest up, lean back slightly. Pull bar to upper chest. DO NOT pull behind neck. Control upward movement.", videoSearchQuery: "Lat Pulldown form" \},\
-                    \{ id: "tue_leg_curl", name: "Leg Curl Machine (Seated or Lying)", sets: "2-3", reps: "10-15", weight: 0, focus: "Adjust machine. Control curl and return. Avoid jerky movements. Hips pressed into pad (lying).", videoSearchQuery: "Lying Leg Curl form OR Seated Leg Curl form" \},\
-                    \{ id: "tue_leg_ext", name: "Leg Extension Machine", sets: "2-3", reps: "10-15", weight: 0, focus: "If ANY knee pain, skip or use very light weight & limited range. Pad on lower shin/ankle. Control extension and lowering. No kicking.", videoSearchQuery: "Leg Extension machine form safe for knees" \},\
-                    \{ id: "tue_rev_fly", name: "Reverse Pec Deck / Reverse Fly Machine", sets: "2-3", reps: "10-15", weight: 0, focus: "Chest against pad. Spine neutral. Squeeze shoulder blades. Control movement. Neck relaxed.", videoSearchQuery: "Reverse Pec Deck form" \},\
-                    \{ id: "tue_shoulder_press", name: "Machine Shoulder Press (Caution for neck)", sets: "2-3", reps: "10-15", weight: 0, focus: "Only if no neck pain. Use light weight. Back flat. Neutral neck. Press up, don't lock elbows. Control descent. If neck discomfort, switch to lateral raises or skip.", videoSearchQuery: "Machine Shoulder Press form" \},\
-                    \{ id: "tue_dead_bug", name: "Dead Bug", sets: "2-3", reps: "8-12/side", weight: null, focus: "Lower back pressed gently into floor. Slow, controlled movements. Only extend arm/leg as far as control allows. Exhale on extension. Neck relaxed.", videoSearchQuery: "Dead Bug exercise form" \}\
-                ]\
-            \},\
-            \{ dayName: "Wednesday", workoutTitle: "Light Cardio + Core & Mobility", type: "Active Recovery", details: "20-30 mins light cardio (stationary bike, treadmill walking - no/low incline). Followed by 15-20 mins core/mobility: Pelvic Tilts, Bird-Dog, Gentle Cat-Cow, Hamstring Stretches, Gentle Neck Stretches (if cleared by doctor/PT)." \},\
-            \{ dayName: "Thursday", workoutTitle: "Full Body Strength A / B (Alternate)", type: "Strength", details: "Alternates weekly.", exercises: [] \}, // Alternating day\
-            \{ dayName: "Friday", workoutTitle: "Rest", type: "Rest", details: "Active rest like a gentle walk is okay if you feel up to it. Focus on recovery." \},\
-            \{ dayName: "Saturday", workoutTitle: "Rest", type: "Rest", details: "Active rest like a gentle walk is okay. Prepare for the week ahead." \}\
-        ];\
-\
-        let historicalData = \{\};\
-        let currentCalendarWeekId = getCurrentWeekId();\
-        let selectedWeekToDisplayId = currentCalendarWeekId;\
-        let activeWorkoutPlan = [];\
-\
-        const ui = \{ /* ... same as before ... */\
-            weekSchedule: document.getElementById('week-schedule'),\
-            detailsContainer: document.getElementById('workout-details-container'),\
-            dayTitle: document.getElementById('workout-day-title'),\
-            typeSubtitle: document.getElementById('workout-type-subtitle'),\
-            exerciseList: document.getElementById('exercise-list'),\
-            alertContainer: document.getElementById('alert-container'),\
-            weekSelector: document.getElementById('weekSelector'),\
-            currentWeekInfo: document.getElementById('currentWeekInfo'),\
-            resetBtn: document.getElementById('resetCurrentWeekData'),\
-            infoModal: document.getElementById('infoModal'),\
-            modalExName: document.getElementById('modal-exercise-name'),\
-            modalExFocus: document.getElementById('modal-exercise-focus'),\
-            dayEditModal: document.getElementById('dayEditModal'),\
-            editModalDayName: document.getElementById('editModalDayName'),\
-            editingDayIndexInput: document.getElementById('editingDayIndex'),\
-            editDayWorkoutTitle: document.getElementById('editDayWorkoutTitle'),\
-            editDayType: document.getElementById('editDayType'),\
-            editDayDetailsContainer: document.getElementById('editDayDetailsContainer'),\
-            editDayDetails: document.getElementById('editDayDetails'),\
-            editStrengthDayOptionsContainer: document.getElementById('editStrengthDayOptionsContainer'),\
-            manageExercisesBtn: document.getElementById('manageExercisesBtn'),\
-            exerciseEditModal: document.getElementById('exerciseEditModal'),\
-            exerciseEditModalDayTitle: document.getElementById('exerciseEditModalDayTitle'),\
-            editingExercisesForDayIndexInput: document.getElementById('editingExercisesForDayIndex'),\
-            exerciseEditList: document.getElementById('exercise-edit-list'),\
-            addNewExerciseBtn: document.getElementById('addNewExerciseBtn'),\
-            addEditExerciseFormContainer: document.getElementById('addEditExerciseFormContainer'),\
-            exerciseFormTitle: document.getElementById('exerciseFormTitle'),\
-            editingExerciseInternalIdInput: document.getElementById('editingExerciseInternalId'),\
-            exFormName: document.getElementById('exFormName'),\
-            exFormSets: document.getElementById('exFormSets'),\
-            exFormReps: document.getElementById('exFormReps'),\
-            exFormWeight: document.getElementById('exFormWeight'),\
-            exFormFocus: document.getElementById('exFormFocus'),\
-            exFormVideoQuery: document.getElementById('exFormVideoQuery'),\
-            saveExerciseDetailBtn: document.getElementById('saveExerciseDetailBtn'),\
-            cancelExerciseDetailBtn: document.getElementById('cancelExerciseDetailBtn')\
-        \};\
-\
-        // --- LOCAL STORAGE & DATA MANAGEMENT ---\
-        function loadBasePlan() \{ const saved = localStorage.getItem('workoutTrackerBasePlan'); if (saved) \{ initialBasePlan = JSON.parse(saved); showAlert('Custom base plan loaded.', 'info'); \} \}\
-        function saveBasePlan() \{ localStorage.setItem('workoutTrackerBasePlan', JSON.stringify(initialBasePlan)); showAlert('Workout template updated!', 'success'); \}\
-        function saveHistoricalDataToStorage() \{ localStorage.setItem('workoutTrackerHistoricalData', JSON.stringify(historicalData)); \}\
-        function loadHistoricalDataFromStorage() \{ const saved = localStorage.getItem('workoutTrackerHistoricalData'); if (saved) historicalData = JSON.parse(saved); if (!historicalData[currentCalendarWeekId]) initializeWeekData(currentCalendarWeekId, true); activeWorkoutPlan = JSON.parse(JSON.stringify(historicalData[selectedWeekToDisplayId])); \}\
-        function initializeWeekData(weekId, saveHist = false) \{ let newPlan = JSON.parse(JSON.stringify(initialBasePlan)); setupAlternatingWorkoutForWeek(newPlan, weekId, "Thursday"); historicalData[weekId] = newPlan; if (saveHist) saveHistoricalDataToStorage(); \}\
-\
-        ui.resetBtn.addEventListener('click', () => \{ /* ... same as before ... */\
-            if (selectedWeekToDisplayId !== currentCalendarWeekId) \{ showAlert('Can only reset weights for current week.', 'error'); return; \}\
-            if (confirm(`Reset weights for $\{currentCalendarWeekId\} to template?`)) \{\
-                const template = JSON.parse(JSON.stringify(initialBasePlan));\
-                let currentWeekHist = historicalData[currentCalendarWeekId];\
-                currentWeekHist.forEach((day, dayIdx) => \{\
-                    if (day.exercises && template[dayIdx] && template[dayIdx].exercises) \{\
-                        day.exercises.forEach(ex => \{\
-                            const templateEx = template[dayIdx].exercises.find(tEx => tEx.id.substring(tEx.id.indexOf('_') + 1) === ex.id.substring(ex.id.indexOf('_') + 1));\
-                            if (templateEx && typeof templateEx.weight === 'number') ex.weight = templateEx.weight;\
-                            else if (ex.weight !== null) ex.weight = 0;\
-                        \});\
-                    \}\
-                \});\
-                activeWorkoutPlan = JSON.parse(JSON.stringify(currentWeekHist));\
-                saveHistoricalDataToStorage(); showAlert('Current week weights reset.', 'success'); renderApp();\
-            \}\
-        \});\
-\
-        // --- ALTERNATING WORKOUT LOGIC ---\
-        function setupAlternatingWorkoutForWeek(plan, weekId, altDayName) \{ /* ... same as before ... */\
-            const targetDay = plan.find(d => d.dayName === altDayName);\
-            if (!targetDay) \{ console.error(`$\{altDayName\} not found for A/B.`); return; \}\
-            const weekNum = parseInt(weekId.split('-W')[1]);\
-            let baseKey = (weekNum % 2 === 0) ? "Full Body Strength B" : "Full Body Strength A";\
-            // Find the Strength A/B definition from the *current* initialBasePlan\
-            const workoutSource = initialBasePlan.find(d => d.workoutTitle === baseKey && d.type === "Strength");\
-            if (workoutSource && workoutSource.exercises) \{\
-                targetDay.workoutTitle = baseKey; targetDay.details = `This week: $\{baseKey\}.`;\
-                targetDay.exercises = JSON.parse(JSON.stringify(workoutSource.exercises)).map(ex => (\{ ...ex, id: `$\{altDayName.toLowerCase().substring(0,3)\}_$\{ex.id.substring(ex.id.indexOf('_') + 1)\}` \}));\
-            \} else \{ targetDay.workoutTitle = `Error: $\{baseKey\} template not found`; targetDay.exercises = []; \}\
-        \}\
-\
-        function showAlert(message, type = 'info') \{ /* ... same as before ... */ \
-            const alertDiv = document.createElement('div');\
-            alertDiv.className = `p-4 mb-4 text-sm rounded-lg $\{type === 'success' ? 'bg-green-100 text-green-700' : type === 'error' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'\}`;\
-            alertDiv.innerHTML = `<span class="font-medium">$\{type[0].toUpperCase() + type.slice(1)\}!</span> $\{message\}`;\
-            const existing = ui.alertContainer.querySelectorAll(`.$\{type === 'success' ? 'bg-green-100' : type === 'error' ? 'bg-red-100' : 'bg-blue-100'\}`);\
-            existing.forEach(a => a.remove());\
-            ui.alertContainer.appendChild(alertDiv);\
-            setTimeout(() => \{ if(alertDiv && alertDiv.parentNode) \{ alertDiv.style.transition = 'opacity 0.5s'; alertDiv.style.opacity = '0'; setTimeout(() => \{ if(alertDiv.parentNode) alertDiv.remove(); \}, 500); \} \}, 3000);\
-        \}\
-\
-        // --- UI RENDERING ---\
-        function renderApp() \{ populateWeekSelector(); renderWeekSchedule(activeWorkoutPlan); ui.detailsContainer.classList.add('hidden'); updateCurrentWeekInfo(); \}\
-        function populateWeekSelector() \{ /* ... same as before ... */\
-            ui.weekSelector.innerHTML = '';\
-            const ids = Object.keys(historicalData).sort().reverse();\
-            if (ids.length === 0 && historicalData[currentCalendarWeekId]) \{ ids.push(currentCalendarWeekId); \}\
-            ids.forEach(id => \{ const opt = document.createElement('option'); opt.value = id; opt.textContent = id + (id === currentCalendarWeekId ? " (Current)" : ""); ui.weekSelector.appendChild(opt); \});\
-            ui.weekSelector.value = selectedWeekToDisplayId;\
-        \}\
-        function updateCurrentWeekInfo() \{ /* ... same as before, updated text for drag and drop ... */\
-             if (selectedWeekToDisplayId === currentCalendarWeekId) \{\
-                ui.currentWeekInfo.textContent = `Editing Current Week: $\{currentCalendarWeekId\}. Drag day cards to reorder template.`;\
-                ui.currentWeekInfo.className = "text-center text-sm text-green-600 mb-4 font-medium";\
-                ui.resetBtn.disabled = false; ui.resetBtn.classList.remove('opacity-50', 'cursor-not-allowed');\
-            \} else \{\
-                ui.currentWeekInfo.textContent = `Viewing Past Week: $\{selectedWeekToDisplayId\} (Read-only).`;\
-                ui.currentWeekInfo.className = "text-center text-sm text-orange-600 mb-4 font-medium";\
-                ui.resetBtn.disabled = true; ui.resetBtn.classList.add('opacity-50', 'cursor-not-allowed');\
-            \}\
-        \}\
-\
-        ui.weekSelector.addEventListener('change', (e) => \{ selectedWeekToDisplayId = e.target.value; if (historicalData[selectedWeekToDisplayId]) \{ activeWorkoutPlan = JSON.parse(JSON.stringify(historicalData[selectedWeekToDisplayId])); renderApp(); \} else \{ showAlert(`Data for $\{selectedWeekToDisplayId\} missing. Initializing.`, 'error'); initializeWeekData(selectedWeekToDisplayId, true); activeWorkoutPlan = JSON.parse(JSON.stringify(historicalData[selectedWeekToDisplayId])); renderApp(); \} \});\
-\
-        // --- DRAG AND DROP LOGIC ---\
-        let draggedItem = null; \
-        let draggedItemOriginalIndexInBasePlan = null; \
-\
-        function handleDragStart(e) \{\
-            draggedItem = e.target.closest('.day-card');\
-            // The dayIndex on the card is its current visual index in activeWorkoutPlan.\
-            // We need to find its corresponding index in initialBasePlan by dayName.\
-            const dayNameToDrag = draggedItem.dataset.dayName;\
-            draggedItemOriginalIndexInBasePlan = initialBasePlan.findIndex(d => d.dayName === dayNameToDrag);\
-\
-            if (draggedItemOriginalIndexInBasePlan === -1) \{\
-                console.error("Could not find dragged item in base plan:", dayNameToDrag);\
-                e.preventDefault(); // Prevent drag if data is inconsistent\
-                return;\
-            \}\
-\
-            e.dataTransfer.effectAllowed = 'move';\
-            // It's good practice to set some data, though not strictly used by this simple reorder logic\
-            e.dataTransfer.setData('text/plain', dayNameToDrag); \
-            setTimeout(() => \{ draggedItem.classList.add('dragging'); \}, 0);\
-        \}\
-\
-        function handleDragOver(e) \{\
-            e.preventDefault(); \
-            const targetCard = e.target.closest('.day-card');\
-            if (targetCard && targetCard !== draggedItem) \{\
-                targetCard.classList.add('drag-over');\
-            \}\
-            return false;\
-        \}\
-\
-        function handleDragLeave(e) \{\
-            const targetCard = e.target.closest('.day-card');\
-            if (targetCard) \{\
-                targetCard.classList.remove('drag-over');\
-            \}\
-        \}\
-\
-        function handleDrop(e) \{\
-            e.preventDefault();\
-            const targetCard = e.target.closest('.day-card');\
-            if (!targetCard || targetCard === draggedItem || draggedItemOriginalIndexInBasePlan === null) \{\
-                if(draggedItem) draggedItem.classList.remove('dragging');\
-                return;\
-            \}\
-            targetCard.classList.remove('drag-over');\
-\
-            const targetDayName = targetCard.dataset.dayName;\
-            const targetIndexInBasePlan = initialBasePlan.findIndex(d => d.dayName === targetDayName);\
-\
-            if (targetIndexInBasePlan === -1) \{\
-                console.error("Could not find drop target in base plan:", targetDayName);\
-                if(draggedItem) draggedItem.classList.remove('dragging');\
-                return;\
-            \}\
-            \
-            // Reorder initialBasePlan (template)\
-            const itemToMoveInBase = initialBasePlan.splice(draggedItemOriginalIndexInBasePlan, 1)[0];\
-            initialBasePlan.splice(targetIndexInBasePlan, 0, itemToMoveInBase);\
-            saveBasePlan(); // Save the reordered template\
-\
-            // If current week is being viewed, reorder its data too\
-            if (selectedWeekToDisplayId === currentCalendarWeekId) \{\
-                const currentWeekHistorical = historicalData[currentCalendarWeekId];\
-                const newOrderedCurrentWeekHistorical = [];\
-                \
-                initialBasePlan.forEach(templateDay => \{ // Iterate over the NEW order of the base plan\
-                    const correspondingDayInHistory = currentWeekHistorical.find(histDay => histDay.dayName === templateDay.dayName);\
-                    if (correspondingDayInHistory) \{\
-                        newOrderedCurrentWeekHistorical.push(correspondingDayInHistory);\
-                    \} else \{\
-                        console.warn(`Day $\{templateDay.dayName\} not in current history during reorder. Using template day.`);\
-                        let newDayFromTemplate = JSON.parse(JSON.stringify(templateDay));\
-                        // If this newly ordered day is Thursday, set up its A/B exercises\
-                        if (newDayFromTemplate.dayName === "Thursday") \{\
-                            setupAlternatingWorkoutForWeek([newDayFromTemplate], currentCalendarWeekId, "Thursday");\
-                        \}\
-                        newOrderedCurrentWeekHistorical.push(newDayFromTemplate);\
-                    \}\
-                \});\
-                \
-                historicalData[currentCalendarWeekId] = newOrderedCurrentWeekHistorical;\
-                activeWorkoutPlan = JSON.parse(JSON.stringify(historicalData[currentCalendarWeekId]));\
-                saveHistoricalDataToStorage();\
-            \}\
-            \
-            renderApp(); // Re-render the entire app\
-            showAlert('Day order updated in template.', 'success');\
-        \}\
-\
-        function handleDragEnd(e) \{\
-            if (draggedItem) draggedItem.classList.remove('dragging');\
-            document.querySelectorAll('.day-card.drag-over').forEach(card => card.classList.remove('drag-over'));\
-            draggedItem = null;\
-            draggedItemOriginalIndexInBasePlan = null;\
-        \}\
-\
-        function renderWeekSchedule(planToRender) \{\
-            ui.weekSchedule.innerHTML = '';\
-            if (!planToRender || planToRender.length === 0) \{ ui.weekSchedule.innerHTML = '<p>No plan.</p>'; return; \}\
-            planToRender.forEach((day, index) => \{ // index here is the current visual index\
-                const dayCard = document.createElement('div');\
-                dayCard.className = `day-card bg-white p-6 rounded-lg shadow-md $\{day.type === 'Rest' ? 'bg-gray-100' : 'hover:bg-blue-50'\}`;\
-                dayCard.setAttribute('draggable', true);\
-                dayCard.dataset.dayIndex = index; // Current visual index\
-                dayCard.dataset.dayName = day.dayName; // Crucial for mapping back to basePlan during drag\
-\
-                let title = day.workoutTitle;\
-                if (day.dayName === "Thursday") \{ // The alternating day\
-                     const thursInPlan = planToRender.find(d => d.dayName === "Thursday");\
-                     if(thursInPlan) title = thursInPlan.workoutTitle;\
-                \}\
-\
-                dayCard.innerHTML = `\
-                    <div class="edit-day-icon-container">\
-                        <svg onclick="event.stopPropagation(); openDayEditModal($\{index\})" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square edit-day-icon" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg>\
-                    </div>\
-                    <h3 class="text-xl font-semibold text-gray-700">$\{day.dayName\}</h3>\
-                    <p class="text-gray-500 text-sm mt-1">$\{title\}</p>\
-                    $\{day.type === 'Strength' ? '<span class="mt-2 inline-block bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-full">Strength</span>' : ''\}\
-                    $\{day.type === 'Cardio/Recovery' || day.type === 'Active Recovery' ? '<span class="mt-2 inline-block bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-full">Active</span>' : ''\}\
-                    $\{day.type === 'Rest' ? '<span class="mt-2 inline-block bg-gray-400 text-white text-xs font-semibold px-2 py-1 rounded-full">Rest</span>' : ''\}\
-                `;\
-                dayCard.addEventListener('click', () => renderWorkoutDetails(index));\
-                dayCard.addEventListener('dragstart', handleDragStart);\
-                dayCard.addEventListener('dragover', handleDragOver);\
-                dayCard.addEventListener('dragleave', handleDragLeave);\
-                dayCard.addEventListener('drop', handleDrop);\
-                dayCard.addEventListener('dragend', handleDragEnd);\
-                ui.weekSchedule.appendChild(dayCard);\
-            \});\
-        \}\
-\
-\
-        function renderWorkoutDetails(dayIndex) \{ /* ... same as before, corrected YouTube link ... */\
-            if (dayIndex < 0 || dayIndex >= activeWorkoutPlan.length) \{ showAlert('Invalid day.', 'error'); ui.detailsContainer.classList.add('hidden'); return; \}\
-            const day = activeWorkoutPlan[dayIndex];\
-            ui.dayTitle.textContent = day.dayName;\
-            ui.typeSubtitle.textContent = day.workoutTitle;\
-            ui.exerciseList.innerHTML = '';\
-            const isEditable = selectedWeekToDisplayId === currentCalendarWeekId;\
-\
-            if (day.type === "Strength" && day.exercises && day.exercises.length > 0) \{\
-                day.exercises.forEach(exercise => \{\
-                    const exerciseDiv = document.createElement('div');\
-                    exerciseDiv.className = 'exercise-card bg-gray-50 p-4 rounded-md shadow-sm';\
-                    // Corrected YouTube search link\
-                    const videoLink = `https://www.youtube.com/results?search_query=$\{encodeURIComponent(exercise.videoSearchQuery)\}`;\
-                    exerciseDiv.innerHTML = `\
-                        <div class="flex justify-between items-center mb-2">\
-                            <h4 class="text-lg font-semibold text-blue-600">$\{exercise.name\}</h4>\
-                            <a href="$\{videoLink\}" target="_blank" title="Search video for $\{exercise.name\}" class="text-blue-500 hover:text-blue-700">\
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-camera-video-fill" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M0 5a2 2 0 0 1 2-2h7.5a2 2 0 0 1 1.983 1.738l3.11-1.382A1 1 0 0 1 16 4.269v7.462a1 1 0 0 1-1.406.913l-3.11-1.382A2 2 0 0 1 9.5 13H2a2 2 0 0 1-2-2V5z"/></svg>\
-                            </a>\
-                        </div>\
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm mb-3">\
-                            <p><span class="font-medium">Sets:</span> $\{exercise.sets\}</p>\
-                            <p><span class="font-medium">Reps:</span> $\{exercise.reps\}</p>\
-                        </div>\
-                        <div class="flex items-center space-x-3">\
-                            $\{exercise.weight !== null ? `<label for="weight-$\{exercise.id\}" class="text-sm font-medium">Weight (kg):</label><input type="number" id="weight-$\{exercise.id\}" value="$\{exercise.weight\}" min="0" step="0.5" class="weight-input" $\{!isEditable ? 'disabled' : ''\}>` : '<p class="text-sm text-gray-500">Bodyweight/Duration</p>'\}\
-                            <svg onclick="openModal('infoModal', $\{dayIndex\}, '$\{exercise.id\}')" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-info-circle-fill info-icon" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>\
-                        </div>`;\
-                    ui.exerciseList.appendChild(exerciseDiv);\
-                    if (exercise.weight !== null && isEditable) \{\
-                        const weightInput = document.getElementById(`weight-$\{exercise.id\}`);\
-                        weightInput.addEventListener('change', (event) => \{\
-                            const newWeight = parseFloat(event.target.value);\
-                            if (!isNaN(newWeight) && newWeight >= 0) \{\
-                                activeWorkoutPlan[dayIndex].exercises.find(ex => ex.id === exercise.id).weight = newWeight;\
-                                historicalData[currentCalendarWeekId] = JSON.parse(JSON.stringify(activeWorkoutPlan));\
-                                saveHistoricalDataToStorage();\
-                                showAlert('Weight updated for current week.', 'success');\
-                            \} else \{ event.target.value = exercise.weight; showAlert('Invalid weight.', 'error'); \}\
-                        \});\
-                        weightInput.addEventListener('focus', () => weightInput.select());\
-                    \}\
-                \});\
-            \} else if (day.details) \{ ui.exerciseList.innerHTML = `<p class="text-gray-600">$\{day.details\}</p>`; \}\
-            else \{ ui.exerciseList.innerHTML = `<p class="text-gray-600">No exercises for this day type or day not configured.</p>`; \}\
-            ui.detailsContainer.classList.remove('hidden');\
-            ui.detailsContainer.scrollIntoView(\{ behavior: 'smooth', block: 'start' \});\
-        \}\
-\
-        // --- MODAL HANDLING ---\
-        function openModal(modalId, dayIndex, exerciseId) \{ /* ... same as before ... */\
-            const modal = document.getElementById(modalId);\
-            if (modalId === 'infoModal') \{\
-                if (dayIndex < 0 || dayIndex >= activeWorkoutPlan.length || !activeWorkoutPlan[dayIndex].exercises) \{ return; \}\
-                const exercise = activeWorkoutPlan[dayIndex].exercises.find(ex => ex.id === exerciseId);\
-                if (exercise) \{ ui.modalExName.textContent = exercise.name; ui.modalExFocus.textContent = exercise.focus; \}\
-            \}\
-            modal.style.display = "block";\
-        \}\
-        function closeModal(modalId) \{ document.getElementById(modalId).style.display = "none"; \}\
-        window.onclick = function(event) \{ if (event.target.classList.contains('modal')) \{ closeModal(event.target.id); \} \}\
-\
-        // --- DAY STRUCTURE EDITING ---\
-        function openDayEditModal(dayIndexInActivePlan) \{ /* ... same as before, ensures editing base plan ... */\
-            const dayNameToEdit = activeWorkoutPlan[dayIndexInActivePlan].dayName;\
-            const dayIndexInBase = initialBasePlan.findIndex(d => d.dayName === dayNameToEdit);\
-            if (dayIndexInBase === -1) \{ showAlert(`Error: Day "$\{dayNameToEdit\}" not in base template.`, "error"); return; \}\
-            ui.editingDayIndexInput.value = dayIndexInBase;\
-            const dayToEdit = initialBasePlan[dayIndexInBase];\
-            ui.editModalDayName.textContent = dayToEdit.dayName;\
-            ui.editDayWorkoutTitle.value = dayToEdit.workoutTitle;\
-            ui.editDayType.value = dayToEdit.type;\
-            ui.editDayDetails.value = dayToEdit.details || "";\
-            toggleDayEditOptions(dayToEdit.type);\
-            openModal('dayEditModal');\
-        \}\
-        ui.editDayType.addEventListener('change', function() \{ toggleDayEditOptions(this.value); \});\
-        function toggleDayEditOptions(type) \{ /* ... same as before ... */\
-            if (type === "Strength") \{ ui.editStrengthDayOptionsContainer.classList.remove('hidden'); ui.editDayDetailsContainer.classList.add('hidden'); \}\
-            else \{ ui.editStrengthDayOptionsContainer.classList.add('hidden'); ui.editDayDetailsContainer.classList.remove('hidden'); \}\
-        \}\
-        function saveDayStructureChanges() \{ /* ... same as before, ensures robust update to current week ... */\
-            const dayIndexInBase = parseInt(ui.editingDayIndexInput.value);\
-            const dayToUpdateInBase = initialBasePlan[dayIndexInBase];\
-            dayToUpdateInBase.workoutTitle = ui.editDayWorkoutTitle.value.trim();\
-            dayToUpdateInBase.type = ui.editDayType.value;\
-            if (dayToUpdateInBase.type !== "Strength") \{ dayToUpdateInBase.details = ui.editDayDetails.value.trim(); dayToUpdateInBase.exercises = []; \}\
-            else \{ dayToUpdateInBase.details = ""; if (!dayToUpdateInBase.exercises) dayToUpdateInBase.exercises = []; \}\
-            saveBasePlan();\
-            if (historicalData[currentCalendarWeekId]) \{\
-                let newCurrentWeekPlan = JSON.parse(JSON.stringify(initialBasePlan)); // Start from new base\
-                const oldCurrentWeekPlan = historicalData[currentCalendarWeekId];\
-                newCurrentWeekPlan.forEach((newDay) => \{ // Map weights from old current week if days/exercises match\
-                    const oldDayMatch = oldCurrentWeekPlan.find(oldD => oldD.dayName === newDay.dayName);\
-                    if (oldDayMatch && oldDayMatch.exercises && newDay.exercises) \{\
-                        newDay.exercises.forEach(newEx => \{\
-                            const oldExMatch = oldDayMatch.exercises.find(oldE => oldE.id === newEx.id);\
-                            if (oldExMatch && typeof oldExMatch.weight === 'number') newEx.weight = oldExMatch.weight;\
-                        \});\
-                    \}\
-                \});\
-                setupAlternatingWorkoutForWeek(newCurrentWeekPlan, currentCalendarWeekId, "Thursday");\
-                historicalData[currentCalendarWeekId] = newCurrentWeekPlan;\
-                saveHistoricalDataToStorage();\
-                activeWorkoutPlan = JSON.parse(JSON.stringify(historicalData[selectedWeekToDisplayId]));\
-            \}\
-            closeModal('dayEditModal'); renderApp(); showAlert(`Template for $\{dayToUpdateInBase.dayName\} updated.`, 'success');\
-        \}\
-\
-        // --- EXERCISE MANAGEMENT FOR A STRENGTH DAY (IN TEMPLATE) ---\
-        ui.manageExercisesBtn.addEventListener('click', () => \{ /* ... same as before ... */\
-            const dayIndexInBase = parseInt(ui.editingDayIndexInput.value);\
-            ui.editingExercisesForDayIndexInput.value = dayIndexInBase;\
-            const dayTitle = initialBasePlan[dayIndexInBase].workoutTitle;\
-            ui.exerciseEditModalDayTitle.textContent = dayTitle;\
-            renderExerciseEditList(dayIndexInBase);\
-            ui.addEditExerciseFormContainer.classList.add('hidden');\
-            openModal('exerciseEditModal');\
-        \});\
-        function renderExerciseEditList(dayIndexInBasePlan) \{ /* ... same as before ... */\
-            ui.exerciseEditList.innerHTML = ''; const day = initialBasePlan[dayIndexInBasePlan];\
-            if (!day.exercises || day.exercises.length === 0) \{ ui.exerciseEditList.innerHTML = '<p>No exercises.</p>'; return; \}\
-            day.exercises.forEach((ex) => \{ const exDiv = document.createElement('div'); exDiv.className = 'flex justify-between items-center p-2 border rounded bg-white'; exDiv.innerHTML = `<span class="text-sm">$\{ex.name\} (S: $\{ex.sets\}, R: $\{ex.reps\})</span><div><button class="px-2 py-1 bg-yellow-400 text-xs rounded hover:bg-yellow-500 mr-1" onclick="editTemplateExercise('$\{ex.id\}')">Edit</button><button class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600" onclick="removeTemplateExercise('$\{ex.id\}')">Del</button></div>`; ui.exerciseEditList.appendChild(exDiv); \});\
-        \}\
-        ui.addNewExerciseBtn.addEventListener('click', () => \{ /* ... same as before ... */\
-            ui.exerciseFormTitle.textContent = "Add New Exercise"; ui.editingExerciseInternalIdInput.value = "";\
-            ['exFormName', 'exFormSets', 'exFormReps', 'exFormFocus', 'exFormVideoQuery'].forEach(id => document.getElementById(id).value = "");\
-            ui.exFormWeight.value = "0"; ui.addEditExerciseFormContainer.classList.remove('hidden');\
-        \});\
-        ui.cancelExerciseDetailBtn.addEventListener('click', () => \{ ui.addEditExerciseFormContainer.classList.add('hidden'); \});\
-        function generateNewExerciseId(dayName) \{ const prefix = dayName.toLowerCase().substring(0,3); return `$\{prefix\}_custom_$\{Date.now()\}`; \}\
-        ui.saveExerciseDetailBtn.addEventListener('click', () => \{ /* ... same as before, ensure robust update to current week ... */\
-            const dayIndexInBase = parseInt(ui.editingExercisesForDayIndexInput.value);\
-            const dayToUpdateInBase = initialBasePlan[dayIndexInBase];\
-            if (!dayToUpdateInBase.exercises) dayToUpdateInBase.exercises = [];\
-            const exData = \{ name: ui.exFormName.value.trim(), sets: ui.exFormSets.value.trim(), reps: ui.exFormReps.value.trim(), weight: parseFloat(ui.exFormWeight.value) || 0, focus: ui.exFormFocus.value.trim(), videoSearchQuery: ui.exFormVideoQuery.value.trim() \};\
-            if (!exData.name) \{ showAlert("Exercise name required.", "error"); return; \}\
-            const editId = ui.editingExerciseInternalIdInput.value;\
-            if (editId) \{ const idx = dayToUpdateInBase.exercises.findIndex(e => e.id === editId); if (idx > -1) dayToUpdateInBase.exercises[idx] = \{ ...dayToUpdateInBase.exercises[idx], ...exData \}; \}\
-            else \{ exData.id = generateNewExerciseId(dayToUpdateInBase.dayName); dayToUpdateInBase.exercises.push(exData); \}\
-            saveBasePlan();\
-            if (historicalData[currentCalendarWeekId] && selectedWeekToDisplayId === currentCalendarWeekId) \{\
-                const currentWkDay = historicalData[currentCalendarWeekId].find(d => d.dayName === dayToUpdateInBase.dayName); // Find by name\
-                if (currentWkDay) \{\
-                    const baseDayExs = JSON.parse(JSON.stringify(dayToUpdateInBase.exercises));\
-                    currentWkDay.exercises = baseDayExs.map(bEx => \{ const oldWkEx = currentWkDay.exercises.find(wEx => wEx.id === bEx.id); return oldWkEx ? \{ ...bEx, weight: oldWkEx.weight \} : bEx; \});\
-                    saveHistoricalDataToStorage(); activeWorkoutPlan = JSON.parse(JSON.stringify(historicalData[selectedWeekToDisplayId]));\
-                \}\
-            \}\
-            renderExerciseEditList(dayIndexInBase); ui.addEditExerciseFormContainer.classList.add('hidden'); renderApp();\
-        \});\
-        function editTemplateExercise(exerciseId) \{ /* ... same as before ... */\
-            const dayIdx = parseInt(ui.editingExercisesForDayIndexInput.value); const ex = initialBasePlan[dayIdx].exercises.find(e => e.id === exerciseId);\
-            if (ex) \{ ui.exerciseFormTitle.textContent = "Edit Exercise"; ui.editingExerciseInternalIdInput.value = ex.id; ui.exFormName.value = ex.name; ui.exFormSets.value = ex.sets; ui.exFormReps.value = ex.reps; ui.exFormWeight.value = ex.weight === null ? "" : ex.weight; ui.exFormFocus.value = ex.focus; ui.exFormVideoQuery.value = ex.videoSearchQuery; ui.addEditExerciseFormContainer.classList.remove('hidden'); \}\
-        \}\
-        function removeTemplateExercise(exerciseId) \{ /* ... same as before ... */\
-            if (!confirm("Remove from template?")) return; const dayIdx = parseInt(ui.editingExercisesForDayIndexInput.value);\
-            initialBasePlan[dayIdx].exercises = initialBasePlan[dayIdx].exercises.filter(e => e.id !== exerciseId); saveBasePlan();\
-            if (historicalData[currentCalendarWeekId] && selectedWeekToDisplayId === currentCalendarWeekId) \{\
-                const currentWkDay = historicalData[currentCalendarWeekId].find(d => d.dayName === initialBasePlan[dayIdx].dayName);\
-                if (currentWkDay) \{\
-                    currentWkDay.exercises = currentWkDay.exercises.filter(e => e.id !== exerciseId);\
-                    saveHistoricalDataToStorage(); activeWorkoutPlan = JSON.parse(JSON.stringify(historicalData[selectedWeekToDisplayId]));\
-                \}\
-            \}\
-            renderExerciseEditList(dayIdx); renderApp();\
-        \}\
-\
-        // --- INITIALIZATION ---\
-        document.addEventListener('DOMContentLoaded', () => \{\
-            currentCalendarWeekId = getCurrentWeekId();\
-            selectedWeekToDisplayId = currentCalendarWeekId;\
-            loadBasePlan();\
-            loadHistoricalDataFromStorage();\
-            renderApp();\
-            if (activeWorkoutPlan && activeWorkoutPlan.length > 0) \{\
-                const today = new Date().toLocaleString('en-us', \{weekday: 'long'\});\
-                const todayIdx = activeWorkoutPlan.findIndex(d => d.dayName === today);\
-                if (todayIdx !== -1) renderWorkoutDetails(todayIdx);\
-            \}\
-        \});\
-    </script>\
-</body>\
-</html>\
-}
+        <div class="mb-6 flex flex-col sm:flex-row justify-center items-center gap-4">
+            <label for="weekSelector" class="text-gray-600 font-medium">View Week:</label>
+            <select id="weekSelector"></select>
+            <button id="resetCurrentWeekData" class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 text-sm">Reset Current Week's Weights to Template</button>
+        </div>
+        <div id="currentWeekInfo" class="text-center text-sm text-gray-500 mb-4"></div>
+        <div id="alert-container" class="mb-4"></div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8" id="week-schedule">
+            </div>
+
+        <div id="workout-details-container" class="bg-white p-6 rounded-lg shadow-lg hidden">
+            <h2 id="workout-day-title" class="text-2xl font-semibold mb-1 text-gray-700"></h2>
+            <p id="workout-type-subtitle" class="text-md text-gray-500 mb-6"></p>
+            <div id="exercise-list" class="space-y-6 exercise-details-container max-h-[60vh] overflow-y-auto pr-2"></div>
+        </div>
+
+        <div id="infoModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeModal('infoModal')">×</span>
+                <h3 id="modal-exercise-name" class="text-xl font-semibold mb-3"></h3>
+                <p id="modal-exercise-focus" class="text-gray-600 whitespace-pre-line"></p>
+            </div>
+        </div>
+
+        <div id="dayEditModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeModal('dayEditModal')">×</span>
+                <h3 class="text-xl font-semibold mb-4">Edit Day Structure (<span id="editModalDayName"></span>)</h3>
+                <input type="hidden" id="editingDayIndex">
+                <div class="space-y-4">
+                    <div>
+                        <label for="editDayWorkoutTitle" class="block text-sm font-medium text-gray-700">Workout Title:</label>
+                        <input type="text" id="editDayWorkoutTitle" class="form-input">
+                    </div>
+                    <div>
+                        <label for="editDayType" class="block text-sm font-medium text-gray-700">Workout Type:</label>
+                        <select id="editDayType" class="form-select">
+                            <option value="Strength">Strength</option>
+                            <option value="Cardio/Recovery">Cardio/Recovery</option>
+                            <option value="Active Recovery">Active Recovery</option>
+                            <option value="Rest">Rest</option>
+                        </select>
+                    </div>
+                    <div id="editDayDetailsContainer">
+                        <label for="editDayDetails" class="block text-sm font-medium text-gray-700">Details:</label>
+                        <textarea id="editDayDetails" rows="3" class="form-textarea"></textarea>
+                    </div>
+                    <div id="editStrengthDayOptionsContainer" class="hidden">
+                         <p class="text-sm text-gray-600 mb-2">For 'Strength' type, manage exercises below. The title can be 'Full Body Strength A', 'Full Body Strength B', or custom.</p>
+                        <button id="manageExercisesBtn" class="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Edit Exercises for this Day</button>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="saveDayStructureChanges()">Save Changes to Template</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="exerciseEditModal" class="modal">
+            <div class="modal-content modal-content-lg">
+                <span class="close-button" onclick="closeModal('exerciseEditModal')">×</span>
+                <h3 class="text-xl font-semibold mb-4">Edit Exercises for <span id="exerciseEditModalDayTitle"></span></h3>
+                <input type="hidden" id="editingExercisesForDayIndex">
+                <div id="exercise-edit-list" class="space-y-3 mb-4 max-h-[40vh] overflow-y-auto p-1"></div>
+                <button id="addNewExerciseBtn" class="mb-4 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 text-sm">Add New Exercise to this Day</button>
+                <div id="addEditExerciseFormContainer" class="hidden bg-gray-50 p-4 rounded-md">
+                     <h4 class="text-md font-semibold mb-2" id="exerciseFormTitle">Add New Exercise</h4>
+                     <input type="hidden" id="editingExerciseInternalId"> <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="block text-sm">Name:</label><input type="text" id="exFormName" class="form-input"></div>
+                        <div><label class="block text-sm">Sets:</label><input type="text" id="exFormSets" class="form-input"></div>
+                        <div><label class="block text-sm">Reps:</label><input type="text" id="exFormReps" class="form-input"></div>
+                        <div><label class="block text-sm">Initial Weight (kg) (0 if N/A):</label><input type="number" id="exFormWeight" class="form-input" value="0" step="0.5"></div>
+                     </div>
+                     <div class="mt-3"><label class="block text-sm">Focus Points:</label><textarea id="exFormFocus" class="form-textarea" rows="2"></textarea></div>
+                     <div class="mt-3"><label class="block text-sm">Video Search Query:</label><input type="text" id="exFormVideoQuery" class="form-input"></div>
+                     <div class="mt-4 flex gap-2">
+                        <button id="saveExerciseDetailBtn" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm">Save Exercise</button>
+                        <button id="cancelExerciseDetailBtn" type="button" class="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm">Cancel</button>
+                     </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="closeModal('exerciseEditModal')">Done Editing Exercises</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- PWA Service Worker Registration ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js') // Assuming sw.js is in the root
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+
+        // --- ISO WEEK CALCULATION ---
+        Date.prototype.getISOWeek = function() { var date = new Date(this.getTime()); date.setHours(0, 0, 0, 0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); var week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7); }
+        Date.prototype.getISOWeekYear = function() { var date = new Date(this.getTime()); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); return date.getFullYear(); }
+        function getCurrentWeekId() { const now = new Date(); return `${now.getISOWeekYear()}-W${String(now.getISOWeek()).padStart(2, '0')}`; }
+
+        // --- DATA INITIALIZATION --- (Sunday as first exercise day)
+        let initialBasePlan = [
+            { dayName: "Sunday", workoutTitle: "Full Body Strength A", type: "Strength", exercises: [
+                    { id: "sun_chest_press", name: "Machine Chest Press", sets: "2-3", reps: "10-15", weight: 0, focus: "Keep head and entire back flat against the pad. Neutral neck position. Exhale on press, inhale on return. Avoid arching your lower back.", videoSearchQuery: "Machine Chest Press form" },
+                    { id: "sun_seated_row", name: "Seated Cable Row", sets: "2-3", reps: "10-15", weight: 0, focus: "Keep spine neutral. Squeeze shoulder blades together. Control movement in both directions. Keep neck in line with spine.", videoSearchQuery: "Seated Cable Row form" },
+                    { id: "sun_leg_press", name: "Leg Press Machine", sets: "2-3", reps: "10-15", weight: 0, focus: "Do NOT let lower back round or lift off pad. Knees track with toes. Control descent. Limit range of motion to avoid knee pain (e.g., no more than 90-degree knee bend if uncomfortable).", videoSearchQuery: "Leg Press form safe for back and knees" },
+                    { id: "sun_lat_raises", name: "Dumbbell Lateral Raises (Seated)", sets: "2-3", reps: "10-15", weight: 0, focus: "Sit with good posture. Neck relaxed. Raise arms to shoulder height only, slight bend in elbows. Control up and down. Avoid shrugging.", videoSearchQuery: "Seated Dumbbell Lateral Raise form" },
+                    { id: "sun_bicep_curls", name: "Bicep Curl Machine or Seated Dumbbell Curls", sets: "2-3", reps: "10-15", weight: 0, focus: "Back straight and supported. Avoid momentum. Control curl and extension. Wrists neutral.", videoSearchQuery: "Machine Bicep Curl form OR Seated Dumbbell Bicep Curl form" },
+                    { id: "sun_triceps_pushdown", name: "Triceps Pushdown (Cable)", sets: "2-3", reps: "10-15", weight: 0, focus: "Elbows tucked. Stand tall, core engaged. Only forearms move. Neck neutral.", videoSearchQuery: "Triceps Pushdown rope form" },
+                    { id: "sun_plank", name: "Plank", sets: "2-3", reps: "20-60s hold", weight: null, focus: "Straight line head to heels (or knees). Engage abs & glutes. Don't let hips sag. Neck in line with spine. Breathe.", videoSearchQuery: "Plank exercise form" }
+                ]
+            },
+            { dayName: "Monday", workoutTitle: "Swimming + Sauna", type: "Cardio/Recovery", details: "Focus on low-impact cardio. Gentle strokes for swimming (freestyle with snorkel if neck sensitive, backstroke). Water walking/jogging also good. Sauna: 5-15 mins, listen to body, hydrate well." },
+            { dayName: "Tuesday", workoutTitle: "Full Body Strength B", type: "Strength", exercises: [
+                    { id: "tue_pec_deck", name: "Pec Deck Machine (Butterfly)", sets: "2-3", reps: "10-15", weight: 0, focus: "Back flat against pad. Handles/pads at chest level. Control movement. Avoid overstretching. Neck neutral.", videoSearchQuery: "Pec Deck Machine form" },
+                    { id: "tue_lat_pulldown", name: "Lat Pulldown (to FRONT)", sets: "2-3", reps: "10-15", weight: 0, focus: "Grip slightly wider than shoulders. Chest up, lean back slightly. Pull bar to upper chest. DO NOT pull behind neck. Control upward movement.", videoSearchQuery: "Lat Pulldown form" },
+                    { id: "tue_leg_curl", name: "Leg Curl Machine (Seated or Lying)", sets: "2-3", reps: "10-15", weight: 0, focus: "Adjust machine. Control curl and return. Avoid jerky movements. Hips pressed into pad (lying).", videoSearchQuery: "Lying Leg Curl form OR Seated Leg Curl form" },
+                    { id: "tue_leg_ext", name: "Leg Extension Machine", sets: "2-3", reps: "10-15", weight: 0, focus: "If ANY knee pain, skip or use very light weight & limited range. Pad on lower shin/ankle. Control extension and lowering. No kicking.", videoSearchQuery: "Leg Extension machine form safe for knees" },
+                    { id: "tue_rev_fly", name: "Reverse Pec Deck / Reverse Fly Machine", sets: "2-3", reps: "10-15", weight: 0, focus: "Chest against pad. Spine neutral. Squeeze shoulder blades. Control movement. Neck relaxed.", videoSearchQuery: "Reverse Pec Deck form" },
+                    { id: "tue_shoulder_press", name: "Machine Shoulder Press (Caution for neck)", sets: "2-3", reps: "10-15", weight: 0, focus: "Only if no neck pain. Use light weight. Back flat. Neutral neck. Press up, don't lock elbows. Control descent. If neck discomfort, switch to lateral raises or skip.", videoSearchQuery: "Machine Shoulder Press form" },
+                    { id: "tue_dead_bug", name: "Dead Bug", sets: "2-3", reps: "8-12/side", weight: null, focus: "Lower back pressed gently into floor. Slow, controlled movements. Only extend arm/leg as far as control allows. Exhale on extension. Neck relaxed.", videoSearchQuery: "Dead Bug exercise form" }
+                ]
+            },
+            { dayName: "Wednesday", workoutTitle: "Light Cardio + Core & Mobility", type: "Active Recovery", details: "20-30 mins light cardio (stationary bike, treadmill walking - no/low incline). Followed by 15-20 mins core/mobility: Pelvic Tilts, Bird-Dog, Gentle Cat-Cow, Hamstring Stretches, Gentle Neck Stretches (if cleared by doctor/PT)." },
+            { dayName: "Thursday", workoutTitle: "Full Body Strength A / B (Alternate)", type: "Strength", details: "Alternates weekly.", exercises: [] }, // Alternating day
+            { dayName: "Friday", workoutTitle: "Rest", type: "Rest", details: "Active rest like a gentle walk is okay if you feel up to it. Focus on recovery." },
+            { dayName: "Saturday", workoutTitle: "Rest", type: "Rest", details: "Active rest like a gentle walk is okay. Prepare for the week ahead." }
+        ];
+
+        let historicalData = {};
+        let currentCalendarWeekId = getCurrentWeekId();
+        let selectedWeekToDisplayId = currentCalendarWeekId;
+        let activeWorkoutPlan = [];
+
+        const ui = { /* ... same as before ... */
+            weekSchedule: document.getElementById('week-schedule'),
+            detailsContainer: document.getElementById('workout-details-container'),
+            dayTitle: document.getElementById('workout-day-title'),
+            typeSubtitle: document.getElementById('workout-type-subtitle'),
+            exerciseList: document.getElementById('exercise-list'),
+            alertContainer: document.getElementById('alert-container'),
+            weekSelector: document.getElementById('weekSelector'),
+            currentWeekInfo: document.getElementById('currentWeekInfo'),
+            resetBtn: document.getElementById('resetCurrentWeekData'),
+            infoModal: document.getElementById('infoModal'),
+            modalExName: document.getElementById('modal-exercise-name'),
+            modalExFocus: document.getElementById('modal-exercise-focus'),
+            dayEditModal: document.getElementById('dayEditModal'),
+            editModalDayName: document.getElementById('editModalDayName'),
+            editingDayIndexInput: document.getElementById('editingDayIndex'),
+            editDayWorkoutTitle: document.getElementById('editDayWorkoutTitle'),
+            editDayType: document.getElementById('editDayType'),
+            editDayDetailsContainer: document.getElementById('editDayDetailsContainer'),
+            editDayDetails: document.getElementById('editDayDetails'),
+            editStrengthDayOptionsContainer: document.getElementById('editStrengthDayOptionsContainer'),
+            manageExercisesBtn: document.getElementById('manageExercisesBtn'),
+            exerciseEditModal: document.getElementById('exerciseEditModal'),
+            exerciseEditModalDayTitle: document.getElementById('exerciseEditModalDayTitle'),
+            editingExercisesForDayIndexInput: document.getElementById('editingExercisesForDayIndex'),
+            exerciseEditList: document.getElementById('exercise-edit-list'),
+            addNewExerciseBtn: document.getElementById('addNewExerciseBtn'),
+            addEditExerciseFormContainer: document.getElementById('addEditExerciseFormContainer'),
+            exerciseFormTitle: document.getElementById('exerciseFormTitle'),
+            editingExerciseInternalIdInput: document.getElementById('editingExerciseInternalId'),
+            exFormName: document.getElementById('exFormName'),
+            exFormSets: document.getElementById('exFormSets'),
+            exFormReps: document.getElementById('exFormReps'),
+            exFormWeight: document.getElementById('exFormWeight'),
+            exFormFocus: document.getElementById('exFormFocus'),
+            exFormVideoQuery: document.getElementById('exFormVideoQuery'),
+            saveExerciseDetailBtn: document.getElementById('saveExerciseDetailBtn'),
+            cancelExerciseDetailBtn: document.getElementById('cancelExerciseDetailBtn')
+        };
+
+        // --- LOCAL STORAGE & DATA MANAGEMENT ---
+        function loadBasePlan() { const saved = localStorage.getItem('workoutTrackerBasePlan'); if (saved) { initialBasePlan = JSON.parse(saved); showAlert('Custom base plan loaded.', 'info'); } }
+        function saveBasePlan() { localStorage.setItem('workoutTrackerBasePlan', JSON.stringify(initialBasePlan)); showAlert('Workout template updated!', 'success'); }
+        function saveHistoricalDataToStorage() { localStorage.setItem('workoutTrackerHistoricalData', JSON.stringify(historicalData)); }
+        function loadHistoricalDataFromStorage() { const saved = localStorage.getItem('workoutTrackerHistoricalData'); if (saved) historicalData = JSON.parse(saved); if (!historicalData[currentCalendarWeekId]) initializeWeekData(currentCalendarWeekId, true); activeWorkoutPlan = JSON.parse(JSON.stringify(historicalData[selectedWeekToDisplayId])); }
+        function initializeWeekData(weekId, saveHist = false) { let newPlan = JSON.parse(JSON.stringify(initialBasePlan)); setupAlternatingWorkoutForWeek(newPlan, weekId, "Thursday"); historicalData[weekId] = newPlan; if (saveHist) saveHistoricalDataToStorage(); }
+
+        ui.resetBtn.addEventListener('click', () => { /* ... same as before ... */
+            if (selectedWeekToDisplayId !== currentCalendarWeekId) { showAlert('Can only reset weights for current week.', 'error'); return; }
+            if (confirm(`Reset weights for ${currentCalendarWeekId} to template?`)) {
+                const template = JSON.parse(JSON.stringify(initialBasePlan));
+                let currentWeekHist = historicalData[currentCalendarWeekId];
+                currentWeekHist.forEach((day, dayIdx) => {
+                    if (day.exercises && template[dayIdx] && template[dayIdx].exercises) {
+                        day.exercises.forEach(ex => {
+                            const templateEx = template[dayIdx].exercises.find(tEx => tEx.id.substring(tEx.id.indexOf('_') + 1) === ex.id.substring(ex.id.indexOf('_') + 1));
+                            if (templateEx && typeof templateEx.weight === 'number') ex.weight = templateEx.weight;
+                            else if (ex.weight !== null) ex.weight = 0;
+                        });
+                    }
+                });
+                activeWorkoutPlan = JSON.parse(JSON.stringify(currentWeekHist));
+                saveHistoricalDataToStorage(); showAlert('Current week weights reset.', 'success'); renderApp();
+            }
+        });
+
+        // --- ALTERNATING WORKOUT LOGIC ---
+        function setupAlternatingWorkoutForWeek(plan, weekId, altDayName) { /* ... same as before ... */
+            const targetDay = plan.find(d => d.dayName === altDayName);
+            if (!targetDay) { console.error(`${altDayName} not found for A/B.`); return; }
+            const weekNum = parseInt(weekId.split('-W')[1]);
+            let baseKey = (weekNum % 2 === 0) ? "Full Body Strength B" : "Full Body Strength A";
+            // Find the Strength A/B definition from the *current* initialBasePlan
+            const workoutSource = initialBasePlan.find(d => d.workoutTitle === baseKey && d.type === "Strength");
+            if (workoutSource && workoutSource.exercises) {
+                targetDay.workoutTitle = baseKey; targetDay.details = `This week: ${baseKey}.`;
+                targetDay.exercises = JSON.parse(JSON.stringify(workoutSource.exercises)).map(ex => ({ ...ex, id: `${altDayName.toLowerCase().substring(0,3)}_${ex.id.substring(ex.id.indexOf('_') + 1)}` }));
+            } else { targetDay.workoutTitle = `Error: ${baseKey} template not found`; targetDay.exercises = []; }
+        }
+
+        function showAlert(message, type = 'info') { /* ... same as before ... */ 
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `p-4 mb-4 text-sm rounded-lg ${type === 'success' ? 'bg-green-100 text-green-700' : type === 'error' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`;
+            alertDiv.innerHTML = `<span class="font-medium">${type[0].toUpperCase() + type.slice(1)}!</span> ${message}`;
+            const existing = ui.alertContainer.querySelectorAll(`.${type === 'success' ? 'bg-green-100' : type === 'error' ? 'bg-red-100' : 'bg-blue-100'}`);
+            existing.forEach(a => a.remove());
+            ui.alertContainer.appendChild(alertDiv);
+            setTimeout(() => { if(alertDiv && alertDiv.parentNode) { alertDiv.style.transition = 'opacity 0.5s'; alertDiv.style.opacity = '0'; setTimeout(() => { if(alertDiv.parentNode) alertDiv.remove(); }, 500); } }, 3000);
+        }
+
+        // --- UI RENDERING ---
+        function renderApp() { populateWeekSelector(); renderWeekSchedule(activeWorkoutPlan); ui.detailsContainer.classList.add('hidden'); updateCurrentWeekInfo(); }
+        function populateWeekSelector() { /* ... same as before ... */
+            ui.weekSelector.innerHTML = '';
+            const ids = Object.keys(historicalData).sort().reverse();
+            if (ids.length === 0 && historicalData[currentCalendarWeekId]) { ids.push(currentCalendarWeekId); }
+            ids.forEach(id => { const opt = document.createElement('option'); opt.value = id; opt.textContent = id + (id === currentCalendarWeekId ? " (Current)" : ""); ui.weekSelector.appendChild(opt); });
+            ui.weekSelector.value = selectedWeekToDisplayId;
+        }
+        function updateCurrentWeekInfo() { /* ... same as before, updated text for drag and drop ... */
+             if (selectedWeekToDisplayId === currentCalendarWeekId) {
+                ui.currentWeekInfo.textContent = `Editing Current Week: ${currentCalendarWeekId}. Drag day cards to reorder template.`;
+                ui.currentWeekInfo.className = "text-center text-sm text-green-600 mb-4 font-medium";
+                ui.resetBtn.disabled = false; ui.resetBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                ui.currentWeekInfo.textContent = `Viewing Past Week: ${selectedWeekToDisplayId} (Read-only).`;
+                ui.currentWeekInfo.className = "text-center text-sm text-orange-600 mb-4 font-medium";
+                ui.resetBtn.disabled = true; ui.resetBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        ui.weekSelector.addEventListener('change', (e) => { selectedWeekToDisplayId = e.target.value; if (historicalData[selectedWeekToDisplayId]) { activeWorkoutPlan = JSON.parse(JSON.stringify(historicalData[selectedWeekToDisplayId])); renderApp(); } else { showAlert(`Data for ${selectedWeekToDisplayId} missing. Initializing.`, 'error'); initializeWeekData(selectedWeekToDisplayId, true); activeWorkoutPlan = JSON.parse(JSON.stringify(historicalData[selectedWeekToDisplayId])); renderApp(); } });
+
+        // --- DRAG AND DROP LOGIC ---
+        let draggedItem = null; 
+        let draggedItemOriginalIndexInBasePlan = null; 
+
+        function handleDragStart(e) {
+            draggedItem = e.target.closest('.day-card');
+            // The dayIndex on the card is its current visual index in activeWorkoutPlan.
+            // We need to find its corresponding index in initialBasePlan by dayName.
+            const dayNameToDrag = draggedItem.dataset.dayName;
+            draggedItemOriginalIndexInBasePlan = initialBasePlan.findIndex(d => d.dayName === dayNameToDrag);
+
+            if (draggedItemOriginalIndexInBasePlan === -1) {
+                console.error("Could not find dragged item in base plan:", dayNameToDrag);
+                e.preventDefault(); // Prevent drag if data is inconsistent
+                return;
+            }
+
+            e.dataTransfer.effectAllowed = 'move';
+            // It's good practice to set some data, though not strictly used by this simple reorder logic
+            e.dataTransfer.setData('text/plain', dayNameToDrag); 
+            setTimeout(() => { draggedItem.classList.add('dragging'); }, 0);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault(); 
+            const targetCard = e.target.closest('.day-card');
+            if (targetCard && targetCard !== draggedItem) {
+                targetCard.classList.add('drag-over');
+            }
+            return false;
+        }
+
+        function handleDragLeave(e) {
+            const targetCard = e.target.closest('.day-card');
+            if (targetCard) {
+                targetCard.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const targetCard = e.target.closest('.day-card');
+            if (!targetCard || targetCard === draggedItem || draggedItemOriginalIndexInBasePlan === null) {
+                if(draggedItem) draggedItem.classList.remove('dragging');
+                return;
+            }
+            targetCard.classList.remove('drag-over');
+
+            const targetDayName = targetCard.dataset.dayName;
+            const targetIndexInBasePlan = initialBasePlan.findIndex(d => d.dayName === targetDayName);
+
+            if (targetIndexInBasePlan === -1) {
+                console.error("Could not find drop target in base plan:", targetDayName);
+                if(draggedItem) draggedItem.classList.remove('dragging');
+                return;
+            }
+            
+            // Reorder initialBasePlan (template)
+            const itemToMoveInBase = initialBasePlan.splice(draggedItemOriginalIndexInBasePlan, 1)[0];
+            initialBasePlan.splice(targetIndexInBasePlan, 0, itemToMoveInBase);
+            saveBasePlan(); // Save the reordered template
+
+            // If current week is being viewed, reorder its data too
+            if (selectedWeekToDisplayId === currentCalendarWeekId) {
+                const currentWeekHistorical = historicalData[currentCalendarWeekId];
+                const newOrderedCurrentWeekHistorical = [];
+                
+                initialBasePlan.forEach(templateDay => { // Iterate over the NEW order of the base plan
+                    const correspondingDayInHistory = currentWeekHistorical.find(histDay => histDay.dayName === templateDay.dayName);
+                    if (correspondingDayInHistory) {
+                        newOrderedCurrentWeekHistorical.push(correspondingDayInHistory);
+                    } else {
+                        console.warn(`Day ${templateDay.dayName} not in current history during reorder. Using template day.`);
+                        let newDayFromTemplate = JSON.parse(JSON.stringify(templateDay));
+                        // If this newly ordered day is Thursday, set up its A/B exercises
+                        if (newDayFromTemplate.dayName === "Thursday") {
+                            setupAlternatingWorkoutForWeek([newDayFromTemplate], currentCalendarWeekId, "Thursday");
+                        }
+                        newOrderedCurrentWeekHistorical.push(newDayFromTemplate);
+                    }
+                });
+                
+                historicalData[currentCalendarWeekId] = newOrderedCurrentWeekHistorical;
+                activeWorkoutPlan = JSON.parse(JSON.stringify(historicalData[currentCalendarWeekId]));
+                saveHistoricalDataToStorage();
+            }
+            
+            renderApp(); // Re-render the entire app
+            showAlert('Day order updated in template.', 'success');
+        }
+
+        function handleDragEnd(e) {
+            if (draggedItem) draggedItem.classList.remove('dragging');
+            document.querySelectorAll('.day-card.drag-over').forEach(card => card.classList.remove('drag-over'));
+            draggedItem = null;
+            draggedItemOriginalIndexInBasePlan = null;
+        }
+
+        function renderWeekSchedule(planToRender) {
+            ui.weekSchedule.innerHTML = '';
+            if (!planToRender || planToRender.length === 0) { ui.weekSchedule.innerHTML = '<p>No plan.</p>'; return; }
+            planToRender.forEach((day, index) => { // index here is the current visual index
+                const dayCard = document.createElement('div');
+                dayCard.className = `day-card bg-white p-6 rounded-lg shadow-md ${day.type === 'Rest' ? 'bg-gray-100' : 'hover:bg-blue-50'}`;
+                dayCard.setAttribute('draggable', true);
+                dayCard.dataset.dayIndex = index; // Current visual index
+                dayCard.dataset.dayName = day.dayName; // Crucial for mapping back to basePlan during drag
+
+                let title = day.workoutTitle;
+                if (day.dayName === "Thursday") { // The alternating day
+                     const thursInPlan = planToRender.find(d => d.dayName === "Thursday");
+                     if(thursInPlan) title = thursInPlan.workoutTitle;
+                }
+
+                dayCard.innerHTML = `
+                    <div class="edit-day-icon-container">
+                        <svg onclick="event.stopPropagation(); openDayEditModal(${index})" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square edit-day-icon" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-700">${day.dayName}</h3>
+                    <p class="text-gray-500 text-sm mt-1">${title}</p>
+                    ${day.type === 'Strength' ? '<span class="mt-2 inline-block bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-full">Strength</span>' : ''}
+                    ${day.type === 'Cardio/Recovery' || day.type === 'Active Recovery' ? '<span class="mt-2 inline-block bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-full">Active</span>' : ''}
+                    ${day.type === 'Rest' ? '<span class="mt-2 inline-block bg-gray-400 text-white text-xs font-semibold px-2 py-1 rounded-full">Rest</span>' : ''}
+                `;
+                dayCard.addEventListener('click', () => renderWorkoutDetails(index));
+                dayCard.addEventListener('dragstart', handleDragStart);
+                dayCard.addEventListener('dragover', handleDragOver);
+                dayCard.addEventListener('dragleave', handleDragLeave);
+                dayCard.addEventListener('drop', handleDrop);
+                dayCard.addEventListener('dragend', handleDragEnd);
+                ui.weekSchedule.appendChild(dayCard);
+            });
+        }
+
+
+        function renderWorkoutDetails(dayIndex) { /* ... same as before, corrected YouTube link ... */
+            if (dayIndex < 0 || dayIndex >= activeWorkoutPlan.length) { showAlert('Invalid day.', 'error'); ui.detailsContainer.classList.add('hidden'); return; }
+            const day = activeWorkoutPlan[dayIndex];
+            ui.dayTitle.textContent = day.dayName;
+            ui.typeSubtitle.textContent = day.workoutTitle;
+            ui.exerciseList.innerHTML = '';
+            const isEditable = selectedWeekToDisplayId === currentCalendarWeekId;
+
+            if (day.type === "Strength" && day.exercises && day.exercises.length > 0) {
+                day.exercises.forEach(exercise => {
+                    const exerciseDiv = document.createElement('div');
+                    exerciseDiv.className = 'exercise-card bg-gray-50 p-4 rounded-md shadow-sm';
+                    // Corrected YouTube search link
+                    const videoLink = `https://www.youtube.com/results?search_query=${encodeURIComponent(exercise.videoSearchQuery)}`;
+                    exerciseDiv.innerHTML = `
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="text-lg font-semibold text-blue-600">${exercise.name}</h4>
+                            <a href="${videoLink}" target="_blank" title="Search video for ${exercise.name}" class="text-blue-500 hover:text-blue-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-camera-video-fill" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M0 5a2 2 0 0 1 2-2h7.5a2 2 0 0 1 1.983 1.738l3.11-1.382A1 1 0 0 1 16 4.269v7.462a1 1 0 0 1-1.406.913l-3.11-1.382A2 2 0 0 1 9.5 13H2a2 2 0 0 1-2-2V5z"/></svg>
+                            </a>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm mb-3">
+                            <p><span class="font-medium">Sets:</span> ${exercise.sets}</p>
+                            <p><span class="font-medium">Reps:</span> ${exercise.reps}</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            ${exercise.weight !== null ? `<label for="weight-${exercise.id}" class="text-sm font-medium">Weight (kg):</label><input type="number" id="weight-${exercise.id}" value="${exercise.weight}" min="0" step="0.5" class="weight-input" ${!isEditable ? 'disabled' : ''}>` : '<p class="text-sm text-gray-500">Bodyweight/Duration</p>'}
+                            <svg onclick="openModal('infoModal', ${dayIndex}, '${exercise.id}')" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-info-circle-fill info-icon" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
+                        </div>`;
+                    ui.exerciseList.appendChild(exerciseDiv);
+                    if (exercise.weight !== null && isEditable) {
+                        const weightInput = document.getElementById(`weight-${exercise.id}`);
+                        weightInput.addEventListener('change', (event) => {
+                            const newWeight = parseFloat(event.target.value);
+                            if (!isNaN(newWeight) && newWeight >= 0) {
+                                activeWorkoutPlan[dayIndex].exercises.find(ex => ex.id === exercise.id).weight = newWeight;
+                                historicalData[currentCalendarWeekId] = JSON.parse(JSON.stringify(activeWorkoutPlan));
+                                saveHistoricalDataToStorage();
+                                showAlert('Weight updated for current week.', 'success');
+                            } else { event.target.value = exercise.weight; showAlert('Invalid weight.', 'error'); }
+                        });
+                        weightInput.addEventListener('focus', () => weightInput.select());
+                    }
+                });
+            } else if (day.details) { ui.exerciseList.innerHTML = `<p class="text-gray-600">${day.details}</p>`; }
+            else { ui.exerciseList.innerHTML = `<p class="text-gray-600">No exercises for this day type or day not configured.</p>`; }
+            ui.detailsContainer.classList.remove('hidden');
+            ui.detailsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // --- MODAL HANDLING ---
+        function openModal(modalId, dayIndex, exerciseId) { /* ... same as before ... */
+            const modal = document.getElementById(modalId);
+            if (modalId === 'infoModal') {
+                if (dayIndex < 0 || dayIndex >= activeWorkoutPlan.length || !activeWorkoutPlan[dayIndex].exercises) { return; }
+                const exercise = activeWorkoutPlan[dayIndex].exercises.find(ex => ex.id === exerciseId);
+                if (exercise) { ui.modalExName.textContent = exercise.name; ui.modalExFocus.textContent = exercise.focus; }
+            }
+            modal.style.display = "block";
+        }
+        function closeModal(modalId) { document.getElementById(modalId).style.display = "none"; }
+        window.onclick = function(event) { if (event.target.classList.contains('modal')) { closeModal(event.target.id); } }
+
+        // --- DAY STRUCTURE EDITING ---
+        function openDayEditModal(dayIndexInActivePlan) { /* ... same as before, ensures editing base plan ... */
+            const dayNameToEdit = activeWorkoutPlan[dayIndexInActivePlan].dayName;
+            const dayIndexInBase = initialBasePlan.findIndex(d => d.dayName === dayNameToEdit);
+            if (dayIndexInBase === -1) { showAlert(`Error: Day "${dayNameToEdit}" not in base template.`, "error"); return; }
+            ui.editingDayIndexInput.value = dayIndexInBase;
+            const dayToEdit = initialBasePlan[dayIndexInBase];
+            ui.editModalDayName.textContent = dayToEdit.dayName;
+            ui.editDayWorkoutTitle.value = dayToEdit.workoutTitle;
+            ui.editDayType.value = dayToEdit.type;
+            ui.editDayDetails.value = dayToEdit.details || "";
+            toggleDayEditOptions(dayToEdit.type);
+            openModal('dayEditModal');
+        }
+        ui.editDayType.addEventListener('change', function() { toggleDayEditOptions(this.value); });
+        function toggleDayEditOptions(type) { /* ... same as before ... */
+            if (type === "Strength") { ui.editStrengthDayOptionsContainer.classList.remove('hidden'); ui.editDayDetailsContainer.classList.add('hidden'); }
+            else { ui.editStrengthDayOptionsContainer.classList.add('hidden'); ui.editDayDetailsContainer.classList.remove('hidden'); }
+        }
+        function saveDayStructureChanges() { /* ... same as before, ensures robust update to current week ... */
+            const dayIndexInBase = parseInt(ui.editingDayIndexInput.value);
+            const dayToUpdateInBase = initialBasePlan[dayIndexInBase];
+            dayToUpdateInBase.workoutTitle = ui.editDayWorkoutTitle.value.trim();
+            dayToUpdateInBase.type = ui.editDayType.value;
+            if (dayToUpdateInBase.type !== "Strength") { dayToUpdateInBase.details = ui.editDayDetails.value.trim(); dayToUpdateInBase.exercises = []; }
+            else { dayToUpdateInBase.details = ""; if (!dayToUpdateInBase.exercises) dayToUpdateInBase.exercises = []; }
+            saveBasePlan();
+            if (historicalData[currentCalendarWeekId]) {
+                let newCurrentWeekPlan = JSON.parse(JSON.stringify(initialBasePlan)); // Start from new base
+                const oldCurrentWeekPlan = historicalData[currentCalendarWeekId];
+                newCurrentWeekPlan.forEach((newDay) => { // Map weights from old current week if days/exercises match
+                    const oldDayMatch = oldCurrentWeekPlan.find(oldD => oldD.dayName === newDay.dayName);
+                    if (oldDayMatch && oldDayMatch.exercises && newDay.exercises) {
+                        newDay.exercises.forEach(newEx => {
+                            const oldExMatch = oldDayMatch.exercises.find(oldE => oldE.id === newEx.id);
+                            if (oldExMatch && typeof oldExMatch.weight === 'number') newEx.weight = oldExMatch.weight;
+                        });
+                    }
+                });
+                setupAlternatingWorkoutForWeek(newCurrentWeekPlan, currentCalendarWeekId, "Thursday");
+                historicalData[currentCalendarWeekId] = newCurrentWeekPlan;
+                saveHistoricalDataToStorage();
+                activeWorkoutPlan = JSON.parse(JSON.stringify(historicalData[selectedWeekToDisplayId]));
+            }
+            closeModal('dayEditModal'); renderApp(); showAlert(`Template for ${dayToUpdateInBase.dayName} updated.`, 'success');
+        }
+
+        // --- EXERCISE MANAGEMENT FOR A STRENGTH DAY (IN TEMPLATE) ---
+        ui.manageExercisesBtn.addEventListener('click', () => { /* ... same as before ... */
+            const dayIndexInBase = parseInt(ui.editingDayIndexInput.value);
+            ui.editingExercisesForDayIndexInput.value = dayIndexInBase;
+            const dayTitle = initialBasePlan[dayIndexInBase].workoutTitle;
+            ui.exerciseEditModalDayTitle.textContent = dayTitle;
+            renderExerciseEditList(dayIndexInBase);
+            ui.addEditExerciseFormContainer.classList.add('hidden');
+            openModal('exerciseEditModal');
+        });
+        function renderExerciseEditList(dayIndexInBasePlan) { /* ... same as before ... */
+            ui.exerciseEditList.innerHTML = ''; const day = initialBasePlan[dayIndexInBasePlan];
+            if (!day.exercises || day.exercises.length === 0) { ui.exerciseEditList.innerHTML = '<p>No exercises.</p>'; return; }
+            day.exercises.forEach((ex) => { const exDiv = document.createElement('div'); exDiv.className = 'flex justify-between items-center p-2 border rounded bg-white'; exDiv.innerHTML = `<span class="text-sm">${ex.name} (S: ${ex.sets}, R: ${ex.reps})</span><div><button class="px-2 py-1 bg-yellow-400 text-xs rounded hover:bg-yellow-500 mr-1" onclick="editTemplateExercise('${ex.id}')">Edit</button><button class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600" onclick="removeTemplateExercise('${ex.id}')">Del</button></div>`; ui.exerciseEditList.appendChild(exDiv); });
+        }
+        ui.addNewExerciseBtn.addEventListener('click', () => { /* ... same as before ... */
+            ui.exerciseFormTitle.textContent = "Add New Exercise"; ui.editingExerciseInternalIdInput.value = "";
+            ['exFormName', 'exFormSets', 'exFormReps', 'exFormFocus', 'exFormVideoQuery'].forEach(id => document.getElementById(id).value = "");
+            ui.exFormWeight.value = "0"; ui.addEditExerciseFormContainer.classList.remove('hidden');
+        });
+        ui.cancelExerciseDetailBtn.addEventListener('click', () => { ui.addEditExerciseFormContainer.classList.add('hidden'); });
+        function generateNewExerciseId(dayName) { const prefix = dayName.toLowerCase().substring(0,3); return `${prefix}_custom_${Date.now()}`; }
+        ui.saveExerciseDetailBtn.addEventListener('click', () => { /* ... same as before, ensure robust update to current week ... */
+            const dayIndexInBase = parseInt(ui.editingExercisesForDayIndexInput.value);
+            const dayToUpdateInBase = initialBasePlan[dayIndexInBase];
+            if (!dayToUpdateInBase.exercises) dayToUpdateInBase.exercises = [];
+            const exData = { name: ui.exFormName.value.trim(), sets: ui.exFormSets.value.trim(), reps: ui.exFormReps.value.trim(), weight: parseFloat(ui.exFormWeight.value) || 0, focus: ui.exFormFocus.value.trim(), videoSearchQuery: ui.exFormVideoQuery.value.trim() };
+            if (!exData.name) { showAlert("Exercise name required.", "error"); return; }
+            const editId = ui.editingExerciseInternalIdInput.value;
+            if (editId) { const idx = dayToUpdateInBase.exercises.findIndex(e => e.id === editId); if (idx > -1) dayToUpdateInBase.exercises[idx] = { ...dayToUpdateInBase.exercises[idx], ...exData }; }
+            else { exData.id = generateNewExerciseId(dayToUpdateInBase.dayName); dayToUpdateInBase.exercises.push(exData); }
+            saveBasePlan();
+            if (historicalData[currentCalendarWeekId] && selectedWeekToDisplayId === currentCalendarWeekId) {
+                const currentWkDay = historicalData[currentCalendarWeekId].find(d => d.dayName === dayToUpdateInBase.dayName); // Find by name
+                if (currentWkDay) {
+                    const baseDayExs = JSON.parse(JSON.stringify(dayToUpdateInBase.exercises));
+                    currentWkDay.exercises = baseDayExs.map(bEx => { const oldWkEx = currentWkDay.exercises.find(wEx => wEx.id === bEx.id); return oldWkEx ? { ...bEx, weight: oldWkEx.weight } : bEx; });
+                    saveHistoricalDataToStorage(); activeWorkoutPlan = JSON.parse(JSON.stringify(historicalData[selectedWeekToDisplayId]));
+                }
+            }
+            renderExerciseEditList(dayIndexInBase); ui.addEditExerciseFormContainer.classList.add('hidden'); renderApp();
+        });
+        function editTemplateExercise(exerciseId) { /* ... same as before ... */
+            const dayIdx = parseInt(ui.editingExercisesForDayIndexInput.value); const ex = initialBasePlan[dayIdx].exercises.find(e => e.id === exerciseId);
+            if (ex) { ui.exerciseFormTitle.textContent = "Edit Exercise"; ui.editingExerciseInternalIdInput.value = ex.id; ui.exFormName.value = ex.name; ui.exFormSets.value = ex.sets; ui.exFormReps.value = ex.reps; ui.exFormWeight.value = ex.weight === null ? "" : ex.weight; ui.exFormFocus.value = ex.focus; ui.exFormVideoQuery.value = ex.videoSearchQuery; ui.addEditExerciseFormContainer.classList.remove('hidden'); }
+        }
+        function removeTemplateExercise(exerciseId) { /* ... same as before ... */
+            if (!confirm("Remove from template?")) return; const dayIdx = parseInt(ui.editingExercisesForDayIndexInput.value);
+            initialBasePlan[dayIdx].exercises = initialBasePlan[dayIdx].exercises.filter(e => e.id !== exerciseId); saveBasePlan();
+            if (historicalData[currentCalendarWeekId] && selectedWeekToDisplayId === currentCalendarWeekId) {
+                const currentWkDay = historicalData[currentCalendarWeekId].find(d => d.dayName === initialBasePlan[dayIdx].dayName);
+                if (currentWkDay) {
+                    currentWkDay.exercises = currentWkDay.exercises.filter(e => e.id !== exerciseId);
+                    saveHistoricalDataToStorage(); activeWorkoutPlan = JSON.parse(JSON.stringify(historicalData[selectedWeekToDisplayId]));
+                }
+            }
+            renderExerciseEditList(dayIdx); renderApp();
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            currentCalendarWeekId = getCurrentWeekId();
+            selectedWeekToDisplayId = currentCalendarWeekId;
+            loadBasePlan();
+            loadHistoricalDataFromStorage();
+            renderApp();
+            if (activeWorkoutPlan && activeWorkoutPlan.length > 0) {
+                const today = new Date().toLocaleString('en-us', {weekday: 'long'});
+                const todayIdx = activeWorkoutPlan.findIndex(d => d.dayName === today);
+                if (todayIdx !== -1) renderWorkoutDetails(todayIdx);
+            }
+        });
+    </script>
+</body>
+</html>

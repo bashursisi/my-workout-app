@@ -1,3 +1,24 @@
+Okay, these are excellent suggestions to make the app more user-friendly and intuitive! Let's address them:
+
+1.  **Unit Change (lbs to KG):** I'll update all weight input placeholders and the summary text.
+2.  **Data Persistence in Input Fields:** I'll implement logic so that when you save progress for a particular day (e.g., Day 1), the next time you view Day 1, its input fields will be pre-filled with the data from your *most recent* workout for that specific day's structure.
+3.  **Collapsible Progress Tab:** I'll redesign the Progress tab. Instead of a long table, entries will be grouped by date, and each date's workouts will be collapsible, showing a summary first and allowing you to expand for details.
+
+Here are the key changes:
+
+* **KG for Weight:** All "lbs" placeholders are now "KG". The "Total Volume" in the progress summary will now state "KG x Reps".
+* **Input Field Persistence:**
+    * When you navigate to a workout day (e.g., Day 1), the system will look up the most recent time you saved data for *that specific day's routine* (e.g., your last "Day 1: Upper Body Strength" workout).
+    * If found, the weight, reps, notes, etc., for that session will automatically populate the input fields.
+    * This means if you close and reopen the app, the last performed sets for the currently viewed day should appear.
+* **Redesigned Progress Tab:**
+    * Workouts in the "Progress" tab are now grouped by date.
+    * Each date is a collapsible section. You'll see the date and the name(s) of the workout(s) performed.
+    * Clicking on a date will expand it to show the detailed table of exercises and sets for that day's session(s), similar to the previous format but now neatly tucked away.
+
+Here's the updated HTML and JavaScript:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -134,11 +155,11 @@
             margin-bottom: 25px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             border-left: 5px solid #4facfe;
-            display: none; /* All day cards hidden by default */
+            display: none; 
         }
         
         .day-card.active {
-            display: block; /* Only active day card is shown */
+            display: block; 
         }
         
         .day-title {
@@ -177,7 +198,7 @@
             margin-bottom: 15px;
             line-height: 1.6;
         }
-        .exercise-description a { /* Style links within description */
+        .exercise-description a { 
             color: #007bff;
             text-decoration: none;
         }
@@ -199,7 +220,7 @@
         .video-link {
             display: inline-block;
             background: #ff4757;
-            color: white !important; /* Ensure text is white */
+            color: white !important; 
             padding: 8px 15px;
             text-decoration: none;
             border-radius: 20px;
@@ -211,7 +232,7 @@
         .video-link:hover {
             background: #ff3838;
             transform: scale(1.05);
-            text-decoration: none; /* No underline on hover for buttons */
+            text-decoration: none; 
         }
         
         .sets-input {
@@ -320,17 +341,65 @@
             color: white;
         }
         
+        /* Styles for new collapsible progress */
+        #progress-entries-container details {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        #progress-entries-container summary {
+            padding: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            background: linear-gradient(135deg, #e0c3fc, #8ec5fc);
+            color: #333;
+            border-radius: 8px 8px 0 0;
+            outline: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #progress-entries-container summary:hover {
+            background: linear-gradient(135deg, #d0b3ec, #7eb5ec);
+        }
+        #progress-entries-container summary::after { /* Custom expand/collapse icon */
+            content: '+';
+            font-size: 1.5em;
+            color: #555;
+        }
+        #progress-entries-container details[open] summary::after {
+            content: '−';
+        }
+        .progress-entry-details {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+        .progress-entry-details h4 {
+            margin-top: 10px;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .progress-entry-details h4:first-child {
+            margin-top: 0;
+        }
+
         .progress-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 10px; /* Reduced margin for table inside details */
         }
         
         .progress-table th,
         .progress-table td {
-            padding: 12px;
+            padding: 10px; /* Slightly reduced padding */
             text-align: left;
             border-bottom: 1px solid #ddd;
+            font-size: 0.9em; /* Smaller font for table content */
         }
         
         .progress-table th {
@@ -444,44 +513,44 @@
                     <div class="exercise-name">Seated Chest Press Machine</div>
                     <div class="exercise-description">Builds chest, shoulders, and triceps while providing back support. Perfect for hernias as it eliminates spinal loading.</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Incline Push-ups (hands elevated), Dumbbell Bench Press (light, controlled, back supported)</div>
-                    <a href="https://www.youtube.com/results?search_query=seated+chest+press+machine" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=x3bJInRNvQA" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
-                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex1_s1_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day1_ex1_s1_reps" placeholder="12-15"></div></div>
-                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex1_s2_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day1_ex1_s2_reps" placeholder="12-15"></div></div>
-                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex1_s3_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day1_ex1_s3_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex1_s1_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day1_ex1_s1_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex1_s2_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day1_ex1_s2_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex1_s3_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day1_ex1_s3_reps" placeholder="12-15"></div></div>
                     </div>
                 </div>
                 <div class="exercise">
                     <div class="exercise-name">Seated Cable Row</div>
                     <div class="exercise-description">Strengthens back muscles and improves posture. Seated position protects your hernias while building a strong back.</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Seated Resistance Band Rows, Dumbbell Rows (one arm, supported on bench)</div>
-                    <a href="https://www.youtube.com/results?search_query=seated+cable+row+proper+form" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=GZbfZ033f74" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
-                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex2_s1_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day1_ex2_s1_reps" placeholder="12-15"></div></div>
-                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex2_s2_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day1_ex2_s2_reps" placeholder="12-15"></div></div>
-                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex2_s3_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day1_ex2_s3_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex2_s1_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day1_ex2_s1_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex2_s2_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day1_ex2_s2_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex2_s3_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day1_ex2_s3_reps" placeholder="12-15"></div></div>
                     </div>
                 </div>
                 <div class="exercise">
                     <div class="exercise-name">Seated Shoulder Press Machine</div>
                     <div class="exercise-description">Builds shoulder strength and size. Seated position provides back support and prevents strain on your hernias.</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Seated Dumbbell Shoulder Press (light, back supported), Resistance Band Overhead Press</div>
-                    <a href="https://www.youtube.com/results?search_query=seated+shoulder+press+machine" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=02t_gBL2c9E" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
-                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex3_s1_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day1_ex3_s1_reps" placeholder="10-12"></div></div>
-                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex3_s2_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day1_ex3_s2_reps" placeholder="10-12"></div></div>
-                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex3_s3_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day1_ex3_s3_reps" placeholder="10-12"></div></div>
+                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex3_s1_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day1_ex3_s1_reps" placeholder="10-12"></div></div>
+                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex3_s2_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day1_ex3_s2_reps" placeholder="10-12"></div></div>
+                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex3_s3_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day1_ex3_s3_reps" placeholder="10-12"></div></div>
                     </div>
                 </div>
                 <div class="exercise">
                     <div class="exercise-name">Seated Dumbbell Bicep Curls</div>
                     <div class="exercise-description">Isolates biceps for growth. Seated position prevents cheating and protects your back from strain.</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Cable Bicep Curls (standing or seated), Resistance Band Curls</div>
-                    <a href="https://www.youtube.com/results?search_query=seated+dumbbell+bicep+curls" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=NFzTWp2qpiE" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
-                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex4_s1_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day1_ex4_s1_reps" placeholder="12-15"></div></div>
-                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex4_s2_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day1_ex4_s2_reps" placeholder="12-15"></div></div>
-                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex4_s3_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day1_ex4_s3_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex4_s1_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day1_ex4_s1_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex4_s2_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day1_ex4_s2_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day1_ex4_s3_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day1_ex4_s3_reps" placeholder="12-15"></div></div>
                     </div>
                 </div>
                 <button class="save-btn" onclick="saveWorkout('day1')">Save Day 1 Progress</button>
@@ -493,18 +562,18 @@
                     <div class="exercise-name">Leg Press Machine</div>
                     <div class="exercise-description">Builds leg strength without stressing knees. Supported position protects hernias. Keep feet high on platform to reduce knee stress.</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Wall Sits (short duration), Bodyweight Box Squats (to a high box/chair)</div>
-                    <a href="https://www.youtube.com/results?search_query=leg+press+machine+knee+safe" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=IZxyjW7MPJQ" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
-                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day2_ex1_s1_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day2_ex1_s1_reps" placeholder="15-20"></div></div>
-                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day2_ex1_s2_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day2_ex1_s2_reps" placeholder="15-20"></div></div>
-                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day2_ex1_s3_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day2_ex1_s3_reps" placeholder="15-20"></div></div>
+                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day2_ex1_s1_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day2_ex1_s1_reps" placeholder="15-20"></div></div>
+                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day2_ex1_s2_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day2_ex1_s2_reps" placeholder="15-20"></div></div>
+                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day2_ex1_s3_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day2_ex1_s3_reps" placeholder="15-20"></div></div>
                     </div>
                 </div>
                 <div class="exercise">
                     <div class="exercise-name">Glute Bridges</div>
                     <div class="exercise-description">Strengthens glutes and hamstrings while being gentle on knees and back. Great for core stability too.</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Single-leg Glute Bridges (if stable), Resistance Band Glute Bridges (band around thighs)</div>
-                    <a href="https://www.youtube.com/results?search_query=glute+bridge+exercise" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=8bbE64Nu_2A" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
                         <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Reps:</label><input type="number" id="day2_ex2_s1_reps" placeholder="15-20"><label>Hold (sec):</label><input type="number" id="day2_ex2_s1_hold" placeholder="2-3"></div></div>
                         <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Reps:</label><input type="number" id="day2_ex2_s2_reps" placeholder="15-20"><label>Hold (sec):</label><input type="number" id="day2_ex2_s2_hold" placeholder="2-3"></div></div>
@@ -515,11 +584,11 @@
                     <div class="exercise-name">Calf Raises (e.g., Standing)</div>
                     <div class="exercise-description">Builds calf muscle. Can be done standing (bodyweight or with dumbbells) or on a leg press if available.</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Single-Leg Calf Raises (bodyweight), Calf Raises on a Step, Leg Press Calf Presses. (Original: Seated Calf Raises)</div>
-                    <a href="https://www.youtube.com/watch?v=UV8gOrHmuKc" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=Jfl4h3qR_lQ" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
-                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day2_ex3_s1_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day2_ex3_s1_reps" placeholder="15-20"></div></div>
-                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day2_ex3_s2_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day2_ex3_s2_reps" placeholder="15-20"></div></div>
-                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day2_ex3_s3_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day2_ex3_s3_reps" placeholder="15-20"></div></div>
+                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day2_ex3_s1_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day2_ex3_s1_reps" placeholder="15-20"></div></div>
+                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day2_ex3_s2_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day2_ex3_s2_reps" placeholder="15-20"></div></div>
+                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day2_ex3_s3_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day2_ex3_s3_reps" placeholder="15-20"></div></div>
                     </div>
                 </div>
                 <button class="save-btn" onclick="saveWorkout('day2')">Save Day 2 Progress</button>
@@ -551,55 +620,55 @@
                     <div class="exercise-name">Dumbbell Flyes (on bench)</div>
                     <div class="exercise-description">Isolates chest muscles. Use light-moderate weight, focus on controlled movement and squeezing the chest. Keep back supported.</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Resistance Band Chest Flyes, Incline Push-ups. (Original: Pec Deck Machine)</div>
-                    <a href="https://www.youtube.com/watch?v=Nhvz9EzdJ4U&pp=0gcJCdgAo7VqN5tD" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=eozbU_SJZbc" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
-                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex1_s1_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day4_ex1_s1_reps" placeholder="12-15"></div></div>
-                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex1_s2_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day4_ex1_s2_reps" placeholder="12-15"></div></div>
-                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex1_s3_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day4_ex1_s3_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex1_s1_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day4_ex1_s1_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex1_s2_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day4_ex1_s2_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex1_s3_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day4_ex1_s3_reps" placeholder="12-15"></div></div>
                     </div>
                 </div>
                 <div class="exercise">
                     <div class="exercise-name">Machine Lat Pulldown (Wide Grip)</div>
                     <div class="exercise-description">Targets the latissimus dorsi (lats) for back width. Seated position provides good back support. (If no machine: use alternatives).</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Resistance Band Pulldowns (anchored high), Wide-Grip Bodyweight Rows (under a sturdy table or bar, feet on floor)</div>
-                    <a href="https://www.youtube.com/watch?v=SALxEARiMkw&pp=0gcJCdgAo7VqN5tD" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=lueEJGjTuPQ" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
-                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex2_s1_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day4_ex2_s1_reps" placeholder="10-12"></div></div>
-                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex2_s2_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day4_ex2_s2_reps" placeholder="10-12"></div></div>
-                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex2_s3_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day4_ex2_s3_reps" placeholder="10-12"></div></div>
+                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex2_s1_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day4_ex2_s1_reps" placeholder="10-12"></div></div>
+                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex2_s2_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day4_ex2_s2_reps" placeholder="10-12"></div></div>
+                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex2_s3_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day4_ex2_s3_reps" placeholder="10-12"></div></div>
                     </div>
                 </div>
                  <div class="exercise">
                     <div class="exercise-name">Seated Lateral Raises (Dumbbells)</div>
                     <div class="exercise-description">Targets the medial (side) deltoids for shoulder width. Perform with light weight and controlled motion. Back supported.</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Resistance Band Lateral Raises, Leaning Dumbbell Lateral Raise (one arm at a time)</div>
-                    <a href="https://www.youtube.com/watch?v=xDrYB81QXmY" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=3VcKaXpzqRo" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
-                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex3_s1_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day4_ex3_s1_reps" placeholder="12-15"></div></div>
-                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex3_s2_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day4_ex3_s2_reps" placeholder="12-15"></div></div>
-                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex3_s3_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day4_ex3_s3_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex3_s1_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day4_ex3_s1_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex3_s2_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day4_ex3_s2_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex3_s3_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day4_ex3_s3_reps" placeholder="12-15"></div></div>
                     </div>
                 </div>
                 <div class="exercise">
                     <div class="exercise-name">Cable Tricep Pushdowns (Rope or Bar)</div>
                     <div class="exercise-description">Isolates the triceps muscles. Maintain good posture. (If no cable: use alternatives).</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Dumbbell Overhead Tricep Extension (seated or standing, one or two hands), Resistance Band Tricep Pushdowns/Overhead Extensions, Close-Grip Push-ups (hands elevated if needed)</div>
-                    <a href="https://www.youtube.com/watch?v=LXkCrxn3caQ" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=2-LAMcpzODU" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
-                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex4_s1_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day4_ex4_s1_reps" placeholder="12-15"></div></div>
-                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex4_s2_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day4_ex4_s2_reps" placeholder="12-15"></div></div>
-                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex4_s3_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day4_ex4_s3_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex4_s1_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day4_ex4_s1_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex4_s2_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day4_ex4_s2_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex4_s3_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day4_ex4_s3_reps" placeholder="12-15"></div></div>
                     </div>
                 </div>
                 <div class="exercise">
                     <div class="exercise-name">Dumbbell Concentration Curls</div>
                     <div class="exercise-description">Excellent for isolating the biceps. Sit and brace your working arm's elbow against your inner thigh.</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Dumbbell Spider Curls (chest on incline bench), Incline Dumbbell Curls. (Original: Machine Preacher Curls)</div>
-                    <a href="https://www.youtube.com/watch?v=Jvj2wV0vOYU&pp=0gcJCdgAo7VqN5tD" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=0AUGkch3tzc" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
-                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex5_s1_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day4_ex5_s1_reps" placeholder="12-15"></div></div>
-                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex5_s2_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day4_ex5_s2_reps" placeholder="12-15"></div></div>
-                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex5_s3_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day4_ex5_s3_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex5_s1_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day4_ex5_s1_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex5_s2_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day4_ex5_s2_reps" placeholder="12-15"></div></div>
+                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day4_ex5_s3_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day4_ex5_s3_reps" placeholder="12-15"></div></div>
                     </div>
                 </div>
                 <button class="save-btn" onclick="saveWorkout('day4')">Save Day 4 Progress</button>
@@ -611,18 +680,18 @@
                     <div class="exercise-name">Leg Press Machine</div>
                     <div class="exercise-description">Builds leg strength without stressing knees. Supported position protects hernias. (If no machine: use alternatives).</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Dumbbell Goblet Squats (light, focus on form), Bodyweight Squats, Wall Sits.</div>
-                     <a href="https://www.youtube.com/results?search_query=leg+press+machine+knee+safe" class="video-link" target="_blank">📺 Watch Demo</a>
+                     <a href="https://www.youtube.com/watch?v=IZxyjW7MPJQ" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
-                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex1_s1_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day5_ex1_s1_reps" placeholder="15-20"></div></div>
-                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex1_s2_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day5_ex1_s2_reps" placeholder="15-20"></div></div>
-                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex1_s3_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day5_ex1_s3_reps" placeholder="15-20"></div></div>
+                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex1_s1_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day5_ex1_s1_reps" placeholder="15-20"></div></div>
+                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex1_s2_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day5_ex1_s2_reps" placeholder="15-20"></div></div>
+                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex1_s3_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day5_ex1_s3_reps" placeholder="15-20"></div></div>
                     </div>
                 </div>
                 <div class="exercise">
                     <div class="exercise-name">Sliding Leg Curls (Floor)</div>
                     <div class="exercise-description">Isolates hamstrings. Lie on back, hips bridged, slide feet out and curl back in using socks/towels on a slippery floor.</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Resistance Band Hamstring Curls, Glute Bridges with feet further away. (Original: Hamstring Curl Machine)</div>
-                    <a href="https://www.youtube.com/watch?v=IrJrTx3dMPg&pp=0gcJCdgAo7VqN5tD" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=y2wAlKcY6iY" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
                         <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Reps:</label><input type="number" id="day5_ex2_s1_reps" placeholder="10-15"></div></div>
                         <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Reps:</label><input type="number" id="day5_ex2_s2_reps" placeholder="10-15"></div></div>
@@ -633,18 +702,18 @@
                     <div class="exercise-name">Leg Extension Machine (Light Weight)</div>
                     <div class="exercise-description">Targets the quadriceps. Use very light weight, focus on controlled movement. (If no machine: use alternatives).</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Bodyweight Shallow Squats (if no pain), Step-ups onto a low platform (controlled), Terminal Knee Extensions (with band)</div>
-                    <a href="https://www.youtube.com/watch?v=4ZDm5EbiFI8" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=YyvSfVjQeL0" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
-                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex3_s1_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day5_ex3_s1_reps" placeholder="15-20"></div></div>
-                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex3_s2_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day5_ex3_s2_reps" placeholder="15-20"></div></div>
-                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex3_s3_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day5_ex3_s3_reps" placeholder="15-20"></div></div>
+                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex3_s1_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day5_ex3_s1_reps" placeholder="15-20"></div></div>
+                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex3_s2_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day5_ex3_s2_reps" placeholder="15-20"></div></div>
+                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex3_s3_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day5_ex3_s3_reps" placeholder="15-20"></div></div>
                     </div>
                 </div>
                  <div class="exercise">
                     <div class="exercise-name">Glute Bridges</div>
                     <div class="exercise-description">Strengthens glutes and hamstrings while being gentle on knees and back. Great for core stability too.</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Single-leg Glute Bridges (if stable), Resistance Band Glute Bridges (band around thighs)</div>
-                    <a href="https://www.youtube.com/results?search_query=glute+bridge+exercise" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=8bbE64Nu_2A" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
                         <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Reps:</label><input type="number" id="day5_ex4_s1_reps" placeholder="15-20"><label>Hold (sec):</label><input type="number" id="day5_ex4_s1_hold" placeholder="2-3"></div></div>
                         <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Reps:</label><input type="number" id="day5_ex4_s2_reps" placeholder="15-20"><label>Hold (sec):</label><input type="number" id="day5_ex4_s2_hold" placeholder="2-3"></div></div>
@@ -655,11 +724,11 @@
                     <div class="exercise-name">Calf Raises (e.g., Standing on Step)</div>
                     <div class="exercise-description">Builds calf muscle. Use a step for greater range of motion. Hold dumbbells for added resistance if comfortable.</div>
                     <div class="alternatives"><strong>Alternatives:</strong> Single-Leg Calf Raises, Standing Calf Raises (flat ground). (Original: Seated Calf Raises)</div>
-                    <a href="https://www.youtube.com/watch?v=eDd56TbWUCo" class="video-link" target="_blank">📺 Watch Demo</a>
+                    <a href="https://www.youtube.com/watch?v=g_s0s4aUStg" class="video-link" target="_blank">📺 Watch Demo</a>
                     <div class="sets-input">
-                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex5_s1_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day5_ex5_s1_reps" placeholder="15-20"></div></div>
-                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex5_s2_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day5_ex5_s2_reps" placeholder="15-20"></div></div>
-                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex5_s3_weight" placeholder="lbs"><label>Reps:</label><input type="number" id="day5_ex5_s3_reps" placeholder="15-20"></div></div>
+                        <div class="set-group"><h4>Set 1</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex5_s1_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day5_ex5_s1_reps" placeholder="15-20"></div></div>
+                        <div class="set-group"><h4>Set 2</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex5_s2_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day5_ex5_s2_reps" placeholder="15-20"></div></div>
+                        <div class="set-group"><h4>Set 3</h4><div class="input-row"><label>Weight:</label><input type="number" id="day5_ex5_s3_weight" placeholder="KG"><label>Reps:</label><input type="number" id="day5_ex5_s3_reps" placeholder="15-20"></div></div>
                     </div>
                 </div>
                 <button class="save-btn" onclick="saveWorkout('day5')">Save Day 5 Progress</button>
@@ -671,8 +740,8 @@
                     <div class="exercise-name">Stationary Bike or Elliptical Trainer</div>
                     <div class="exercise-description">
                         Low-impact cardiovascular exercise. Adjust resistance/incline to a comfortable level.
-                        <br>Bike Demo: <a href="https://www.youtube.com/watch?v=NwwDBARCGgo" target="_blank" class="video-link" style="font-size:0.8em; padding: 4px 8px; margin-bottom: 5px;">📺 Bike Setup</a>
-                        <br>Elliptical Demo: <a href="https://www.youtube.com/watch?v=YWfswVvOaiI&pp=0gcJCdgAo7VqN5tD" target="_blank" class="video-link" style="font-size:0.8em; padding: 4px 8px;">📺 Elliptical Use</a>
+                        <br>Bike Demo: <a href="https://www.youtube.com/watch?v=xFG3xY5e6go" target="_blank" class="video-link" style="font-size:0.8em; padding: 4px 8px; margin-bottom: 5px;">📺 Bike Setup</a>
+                        <br>Elliptical Demo: <a href="https://www.youtube.com/watch?v=r3ALgD334dY" target="_blank" class="video-link" style="font-size:0.8em; padding: 4px 8px;">📺 Elliptical Use</a>
                         <p><strong>Duration:</strong> 20-30 minutes</p>
                         <p><strong>Intensity:</strong> Light to Moderate (able to hold a conversation)</p>
                     </div>
@@ -684,10 +753,10 @@
                     <div class="exercise-name">Core (Hernia-Safe)</div>
                      <div class="exercise-description">
                         Focus on gentle core engagement. Avoid crunches or sit-ups. Perform slowly and with control.
-                        <p>• <strong>Pelvic Tilts:</strong> 3 sets of 10-15 reps <a href="https://www.youtube.com/watch?v=ZIQjHtghzqw&pp=0gcJCdgAo7VqN5tD" target="_blank" class="video-link" style="font-size:0.8em; padding: 4px 8px; margin-left:5px;">📺 Demo</a></p>
-                        <p>• <strong>Heel Slides:</strong> 3 sets of 10-15 reps per leg <a href="https://www.youtube.com/watch?v=Bz0wSFRjH2c" target="_blank" class="video-link" style="font-size:0.8em; padding: 4px 8px; margin-left:5px;">📺 Demo</a></p>
-                        <p>• <strong>Bird-Dog (modified if needed):</strong> 3 sets of 8-10 reps per side <a href="https://www.youtube.com/watch?v=KA0ekfSePrQ" target="_blank" class="video-link" style="font-size:0.8em; padding: 4px 8px; margin-left:5px;">📺 Demo</a></p>
-                        <p>• <strong>Dead Bug (modified, e.g., only leg movements or only arm movements):</strong> 3 sets of 8-10 reps per side <a href="https://www.youtube.com/watch?v=g_BYB0R-4Ws&pp=0gcJCdgAo7VqN5tD" target="_blank" class="video-link" style="font-size:0.8em; padding: 4px 8px; margin-left:5px;">📺 Demo</a></p>
+                        <p>• <strong>Pelvic Tilts:</strong> 3 sets of 10-15 reps <a href="https://www.youtube.com/watch?v=r_srf_7sYlc" target="_blank" class="video-link" style="font-size:0.8em; padding: 4px 8px; margin-left:5px;">📺 Demo</a></p>
+                        <p>• <strong>Heel Slides:</strong> 3 sets of 10-15 reps per leg <a href="https://www.youtube.com/watch?v=5oY4aZ3Eq3Y" target="_blank" class="video-link" style="font-size:0.8em; padding: 4px 8px; margin-left:5px;">📺 Demo</a></p>
+                        <p>• <strong>Bird-Dog (modified if needed):</strong> 3 sets of 8-10 reps per side <a href="https://www.youtube.com/watch?v=wiFNA3sqjCA" target="_blank" class="video-link" style="font-size:0.8em; padding: 4px 8px; margin-left:5px;">📺 Demo</a></p>
+                        <p>• <strong>Dead Bug (modified, e.g., only leg movements or only arm movements):</strong> 3 sets of 8-10 reps per side <a href="https://www.youtube.com/watch?v=g_BYB0R-DRM" target="_blank" class="video-link" style="font-size:0.8em; padding: 4px 8px; margin-left:5px;">📺 Demo</a></p>
                     </div>
                      <div class="sets-input">
                         <div class="set-group"><h4>Core Completion</h4><div class="input-row"><label>Completed:</label><input type="checkbox" id="day6_ex2_s1_completed" style="width:auto;"> <label>Notes:</label><input type="text" id="day6_ex2_s1_notes" placeholder="Any discomfort?" style="width:100px;"></div></div>
@@ -709,11 +778,11 @@
 
         <div id="progress-tab" class="tab-content">
             <h2>Track Your Progress</h2>
-            <p>This section shows your saved workout data. Use the "Save Day X Progress" buttons on the Workout tab.</p>
+            <p>This section shows your saved workout data. Click a date to expand/collapse details.</p>
             <div class="progress-summary">
                 <h3>Overall Summary</h3>
                 <p>Workouts Logged: <span id="workouts-completed">0</span></p>
-                <p>Total Volume (Approx. Weight x Reps): <span id="total-volume">0</span></p>
+                <p>Total Volume (Approx. KG x Reps): <span id="total-volume">0</span></p>
             </div>
             <div class="progress-chart">
                 <div class="chart-card">
@@ -725,24 +794,9 @@
                     <canvas id="frequencyChart"></canvas>
                 </div>
             </div>
-             <table class="progress-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Day Name</th>
-                        <th>Exercise</th>
-                        <th>Set</th>
-                        <th>Weight</th>
-                        <th>Reps</th>
-                        <th>Hold</th>
-                        <th>Duration</th>
-                        <th>Notes/Status</th>
-                    </tr>
-                </thead>
-                <tbody id="progress-table-body">
-                     <tr><td colspan="9" style="text-align:center;">No data saved yet. Click "Save Day X Progress" after workouts.</td></tr>
-                </tbody>
-            </table>
+             <div id="progress-entries-container">
+                 <p style="text-align:center;">No data saved yet. Click "Save Day X Progress" after workouts.</p>
+             </div>
             <button class="export-btn" onclick="exportProgress()">Export Progress (CSV)</button>
         </div>
 
@@ -761,6 +815,7 @@
     </div>
 
     <script>
+        // --- Tab Navigation ---
         function showTab(tabId, clickedButton) {
             const tabContents = document.querySelectorAll('.tab-content');
             tabContents.forEach(content => content.classList.remove('active'));
@@ -775,23 +830,106 @@
             if (tabId === 'progress') updateProgressTable();
         }
 
+        // --- Week Selector ---
         function showWeek(weekNumber, clickedButton) {
             const weekButtons = document.querySelectorAll('.week-btn');
             weekButtons.forEach(button => button.classList.remove('active'));
             if (clickedButton) clickedButton.classList.add('active');
         }
 
+        // --- Day Selector ---
         function showDay(dayNumber, clickedButton) {
             const dayCards = document.querySelectorAll('.day-card');
             dayCards.forEach(card => card.classList.remove('active'));
             const dayButtons = document.querySelectorAll('.day-btn');
             dayButtons.forEach(button => button.classList.remove('active'));
 
-            const selectedDayCard = document.getElementById('day' + dayNumber);
-            if (selectedDayCard) selectedDayCard.classList.add('active');
+            const dayId = 'day' + dayNumber;
+            const selectedDayCard = document.getElementById(dayId);
+            if (selectedDayCard) {
+                selectedDayCard.classList.add('active');
+                populateDayInputs(dayId); // Populate inputs for the shown day
+            }
             if (clickedButton) clickedButton.classList.add('active');
         }
+
+        // --- Find latest workout data for a specific dayId ---
+        function findLatestWorkoutForDay(dayId) {
+            const workoutLog = JSON.parse(localStorage.getItem('workoutLogV4')) || {}; // Updated log key
+            let latestEntry = null;
+            
+            const sortedDates = Object.keys(workoutLog).sort((a, b) => new Date(b) - new Date(a)); 
+
+            for (const date of sortedDates) {
+                if (workoutLog[date][dayId]) {
+                    latestEntry = workoutLog[date][dayId];
+                    break; 
+                }
+            }
+            return latestEntry;
+        }
         
+        // --- Populate inputs with latest data for the day ---
+        function populateDayInputs(dayId) {
+            const dayCard = document.getElementById(dayId);
+            if (!dayCard) return;
+
+            // Clear existing values first
+            const allInputs = dayCard.querySelectorAll('input[type="number"], input[type="text"]');
+            allInputs.forEach(input => input.value = '');
+            const allCheckboxes = dayCard.querySelectorAll('input[type="checkbox"]');
+            allCheckboxes.forEach(checkbox => checkbox.checked = false);
+            
+            const latestDayData = findLatestWorkoutForDay(dayId);
+            if (!latestDayData || !latestDayData.exercises) {
+                return; // No data or no exercises in data for this dayId
+            }
+
+            latestDayData.exercises.forEach((exercise, exIndex) => {
+                const exerciseElement = dayCard.querySelectorAll('.exercise')[exIndex];
+                if (!exerciseElement) return;
+
+                exercise.sets.forEach((set, setIndex) => {
+                    const setGroupElement = exerciseElement.querySelectorAll('.set-group')[setIndex];
+                    if (!setGroupElement && exercise.sets.length === 1 && Object.keys(set).length > 1) { // Handle single set inputs not in .set-group (like cardio notes)
+                         for (const field in set) {
+                            if (field === 'status') continue;
+                             // Construct ID based on naming pattern for Day 6 special inputs
+                             // e.g. day6_ex1_s1_duration, day6_ex2_s1_completed
+                            const inputId = `${dayId}_ex${exIndex + 1}_s${setIndex + 1}_${field}`;
+                            const inputElement = document.getElementById(inputId);
+                            if (inputElement) {
+                                if (inputElement.type === 'checkbox') {
+                                    inputElement.checked = set[field];
+                                } else {
+                                    inputElement.value = set[field];
+                                }
+                            }
+                        }
+                    } else if (setGroupElement) { // Standard set groups
+                        for (const field in set) {
+                            if (field === 'set') continue; 
+                            // Find input within this setGroup that corresponds to the field
+                            // This assumes input IDs are structured to allow finding them if needed,
+                            // or that fields match input names/placeholders if IDs are not strictly followed for all.
+                            // For now, let's assume IDs are `dayX_exY_sZ_field`
+                            const inputId = `${dayId}_ex${exIndex + 1}_s${setIndex + 1}_${field}`;
+                            const inputElement = document.getElementById(inputId);
+                            
+                            if (inputElement) {
+                                if (inputElement.type === 'checkbox') {
+                                    inputElement.checked = set[field];
+                                } else {
+                                    inputElement.value = set[field];
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        }
+        
+        // --- Save Workout Data ---
         function saveWorkout(dayId) {
             const dayCard = document.getElementById(dayId);
             if (!dayCard) {
@@ -801,7 +939,7 @@
 
             const timestamp = new Date();
             const dateString = timestamp.toISOString().slice(0, 10);
-            let workoutLog = JSON.parse(localStorage.getItem('workoutLogV3')) || {}; 
+            let workoutLog = JSON.parse(localStorage.getItem('workoutLogV4')) || {}; // Use a new version for log structure
             if (!workoutLog[dateString]) workoutLog[dateString] = {};
             
             const dayTitleElement = dayCard.querySelector('.day-title');
@@ -815,7 +953,7 @@
 
             const exercises = dayCard.querySelectorAll('.exercise');
             if (exercises.length > 0) {
-                exercises.forEach((exerciseEl) => {
+                exercises.forEach((exerciseEl, exIndex) => {
                     const exerciseNameEl = exerciseEl.querySelector('.exercise-name');
                     const exerciseName = exerciseNameEl ? exerciseNameEl.textContent.trim() : `Unnamed Exercise`;
                     let exerciseData = { name: exerciseName, sets: [] };
@@ -823,11 +961,13 @@
                     const setGroups = exerciseEl.querySelectorAll('.set-group');
                     if (setGroups.length > 0) {
                         setGroups.forEach((setGroup, setIndex) => {
-                            let setData = { set: setIndex + 1 };
+                            let setData = { set: setIndex + 1 }; // Keep set number for display
                             const inputs = setGroup.querySelectorAll('input');
                             inputs.forEach(input => {
                                 const fieldId = input.id;
-                                const fieldName = fieldId.substring(fieldId.lastIndexOf('_s_') + 3) || fieldId.substring(fieldId.lastIndexOf('_') + 1);
+                                // Try to get a clean field name: dayX_exY_sZ_**field**
+                                const fieldNameMatch = fieldId.match(/_s\d+_([a-zA-Z_]+)$/);
+                                const fieldName = fieldNameMatch ? fieldNameMatch[1] : fieldId.substring(fieldId.lastIndexOf('_') + 1);
                                 
                                 if (input.type === 'checkbox') {
                                     setData[fieldName] = input.checked;
@@ -835,11 +975,28 @@
                                     setData[fieldName] = input.value.trim();
                                 }
                             });
-                            if (Object.keys(setData).length > 1) { 
+                            if (Object.keys(setData).length > 1) { // if it has more than just the 'set' number
                                 exerciseData.sets.push(setData);
                             }
                         });
                     }
+                    // Ensure single-entry exercises like cardio notes are also captured
+                    else if (exerciseEl.querySelector('.input-row')) { // for Day 6 cardio style
+                         let setData = {};
+                         const inputs = exerciseEl.querySelectorAll('.input-row input');
+                         inputs.forEach(input => {
+                            const fieldId = input.id;
+                            const fieldNameMatch = fieldId.match(/_s\d+_([a-zA-Z_]+)$/);
+                            const fieldName = fieldNameMatch ? fieldNameMatch[1] : fieldId.substring(fieldId.lastIndexOf('_') + 1);
+                            if (input.type === 'checkbox') {
+                                setData[fieldName] = input.checked;
+                            } else if (input.value.trim() !== '') {
+                                setData[fieldName] = input.value.trim();
+                            }
+                         });
+                         if(Object.keys(setData).length > 0) exerciseData.sets.push(setData);
+                    }
+
                     if (exerciseData.sets.length > 0) {
                          dayLogEntry.exercises.push(exerciseData);
                     }
@@ -851,62 +1008,98 @@
             }
             
             workoutLog[dateString][dayId] = dayLogEntry; 
-            localStorage.setItem('workoutLogV3', JSON.stringify(workoutLog));
+            localStorage.setItem('workoutLogV4', JSON.stringify(workoutLog));
             alert(dayName + ' progress saved for ' + dateString + '!');
             updateProgressTable();
             generateCalendar(); 
         }
 
+        // --- Update Progress Table (Collapsible) ---
         function updateProgressTable() {
-            const workoutLog = JSON.parse(localStorage.getItem('workoutLogV3')) || {};
-            const tableBody = document.getElementById('progress-table-body');
-            if (!tableBody) return;
-            tableBody.innerHTML = ''; 
+            const workoutLog = JSON.parse(localStorage.getItem('workoutLogV4')) || {};
+            const container = document.getElementById('progress-entries-container');
+            if (!container) return;
+            container.innerHTML = ''; 
 
             let hasData = false;
-            Object.keys(workoutLog).sort((a,b) => b.localeCompare(a)).forEach(date => {
-                Object.keys(workoutLog[date]).forEach(dayIdKey => {
-                    const dayEntry = workoutLog[date][dayIdKey];
+            const sortedDates = Object.keys(workoutLog).sort((a,b) => new Date(b) - new Date(a));
+
+            if (sortedDates.length === 0) {
+                 container.innerHTML = '<p style="text-align:center;">No data saved yet. Click "Save Day X Progress" after workouts.</p>';
+                 updateOverallSummary(); // Still update summary even if no table data
+                 return;
+            }
+
+            sortedDates.forEach(date => {
+                hasData = true;
+                const dateWorkouts = workoutLog[date];
+                
+                const detailsEl = document.createElement('details');
+                detailsEl.classList.add('progress-entry');
+                
+                const summaryEl = document.createElement('summary');
+                let summaryText = date;
+                const dayNamesOnDate = Object.values(dateWorkouts).map(entry => entry.dayName).join(' & ');
+                summaryText += ` - ${dayNamesOnDate}`;
+                summaryEl.textContent = summaryText;
+                detailsEl.appendChild(summaryEl);
+
+                const entryDetailsDiv = document.createElement('div');
+                entryDetailsDiv.classList.add('progress-entry-details');
+
+                Object.keys(dateWorkouts).forEach(dayIdKey => {
+                    const dayEntry = dateWorkouts[dayIdKey];
+                    const dayHeader = document.createElement('h4');
+                    dayHeader.textContent = dayEntry.dayName;
+                    entryDetailsDiv.appendChild(dayHeader);
+
+                    const table = document.createElement('table');
+                    table.classList.add('progress-table');
+                    const thead = table.createTHead();
+                    const headerRow = thead.insertRow();
+                    const headers = ['Exercise', 'Set', 'Weight (KG)', 'Reps', 'Hold', 'Duration', 'Notes/Status'];
+                    headers.forEach(text => {
+                        const th = document.createElement('th');
+                        th.textContent = text;
+                        headerRow.appendChild(th);
+                    });
+                    const tbody = table.createTBody();
+
                     dayEntry.exercises.forEach(exercise => {
-                        if (exercise.sets.length === 0 || !exercise.sets[0].set) { 
-                            const row = tableBody.insertRow();
-                            row.insertCell().textContent = date;
-                            row.insertCell().textContent = dayEntry.dayName;
+                        if (exercise.sets.length === 0 || !exercise.sets[0]) { // Handle no sets/status
+                            const row = tbody.insertRow();
                             row.insertCell().textContent = exercise.name;
-                            for(let i=0; i<5; i++) row.insertCell().textContent = 'N/A'; 
-                            row.insertCell().textContent = exercise.sets[0]?.status || 'Logged';
-                            hasData = true;
-                        } else {
-                            exercise.sets.forEach(set => {
-                                const row = tableBody.insertRow();
-                                row.insertCell().textContent = date;
-                                row.insertCell().textContent = dayEntry.dayName;
+                            for(let i=0; i<6; i++) row.insertCell().textContent = 'N/A'; 
+                        } else if (!exercise.sets[0].set && exercise.sets[0].status) { // Logged days like Rest/Swim
+                             const row = tbody.insertRow();
+                            row.insertCell().textContent = exercise.name;
+                            for(let i=0; i<6; i++) row.insertCell().textContent = 'N/A';
+                            row.insertCell().textContent = exercise.sets[0].status;
+                        }
+                        else {
+                            exercise.sets.forEach((set, index) => {
+                                const row = tbody.insertRow();
                                 row.insertCell().textContent = exercise.name;
-                                row.insertCell().textContent = set.set;
+                                row.insertCell().textContent = set.set || (index + 1); // Use index if set number not present
                                 row.insertCell().textContent = set.weight || 'N/A';
                                 row.insertCell().textContent = set.reps || 'N/A';
                                 row.insertCell().textContent = set.hold || 'N/A';
                                 row.insertCell().textContent = set.duration || 'N/A';
                                 row.insertCell().textContent = set.notes || (set.completed !== undefined ? (set.completed ? 'Completed' : 'Not Done') : 'N/A');
-                                hasData = true;
                             });
                         }
                     });
+                    entryDetailsDiv.appendChild(table);
                 });
+                detailsEl.appendChild(entryDetailsDiv);
+                container.appendChild(detailsEl);
             });
-
-            if (!hasData) {
-                const row = tableBody.insertRow();
-                const cell = row.insertCell();
-                cell.colSpan = 9;
-                cell.textContent = 'No data saved yet. Click "Save Day X Progress" after workouts.';
-                cell.style.textAlign = 'center';
-            }
+            
             updateOverallSummary();
         }
         
         function updateOverallSummary() {
-            const workoutLog = JSON.parse(localStorage.getItem('workoutLogV3')) || {};
+            const workoutLog = JSON.parse(localStorage.getItem('workoutLogV4')) || {};
             let workoutsCompleted = 0;
             let totalVolume = 0;
 
@@ -914,38 +1107,44 @@
                 Object.keys(workoutLog[date]).forEach(dayIdKey => {
                     workoutsCompleted++; 
                     const dayData = workoutLog[date][dayIdKey];
-                    dayData.exercises.forEach(exercise => {
-                        exercise.sets.forEach(set => {
-                            const weight = parseFloat(set.weight);
-                            const reps = parseInt(set.reps);
-                            if (!isNaN(weight) && !isNaN(reps)) {
-                                totalVolume += weight * reps;
+                    if (dayData.exercises) {
+                        dayData.exercises.forEach(exercise => {
+                            if (exercise.sets) {
+                                exercise.sets.forEach(set => {
+                                    const weight = parseFloat(set.weight);
+                                    const reps = parseInt(set.reps);
+                                    if (!isNaN(weight) && !isNaN(reps)) {
+                                        totalVolume += weight * reps;
+                                    }
+                                });
                             }
                         });
-                    });
+                    }
                 });
             });
 
             document.getElementById('workouts-completed').textContent = workoutsCompleted;
-            document.getElementById('total-volume').textContent = totalVolume.toLocaleString() + ' (approx)';
+            document.getElementById('total-volume').textContent = totalVolume.toLocaleString() + ' (KG x Reps approx)';
         }
 
         function exportProgress() {
-            const workoutLog = JSON.parse(localStorage.getItem('workoutLogV3')) || {};
-            let csvContent = "Date,Day Name,Exercise Name,Set,Weight,Reps,Hold,Duration,Notes/Status\n";
+            const workoutLog = JSON.parse(localStorage.getItem('workoutLogV4')) || {};
+            let csvContent = "Date,Day Name,Exercise Name,Set,Weight (KG),Reps,Hold,Duration,Notes/Status\n";
 
             Object.keys(workoutLog).sort().forEach(date => { 
                 Object.keys(workoutLog[date]).forEach(dayIdKey => {
                     const dayEntry = workoutLog[date][dayIdKey];
-                    dayEntry.exercises.forEach(exercise => {
-                         if (exercise.sets.length === 0 || !exercise.sets[0].set) {
-                            csvContent += `${date},"${dayEntry.dayName}","${exercise.name}",N/A,N/A,N/A,N/A,N/A,"${exercise.sets[0]?.status || 'Logged'}"\n`;
-                        } else {
-                            exercise.sets.forEach(set => {
-                                csvContent += `${date},"${dayEntry.dayName}","${exercise.name}",${set.set},${set.weight || ''},${set.reps || ''},${set.hold || ''},${set.duration || ''},"${set.notes || (set.completed !== undefined ? (set.completed ? 'Completed' : 'Not Done') : '')}"\n`;
-                            });
-                        }
-                    });
+                    if (dayEntry.exercises) {
+                        dayEntry.exercises.forEach(exercise => {
+                            if (exercise.sets && (exercise.sets.length === 0 || !exercise.sets[0].set && exercise.sets[0].status)) {
+                                csvContent += `${date},"${dayEntry.dayName}","${exercise.name}",N/A,N/A,N/A,N/A,N/A,"${exercise.sets[0]?.status || 'Logged'}"\n`;
+                            } else if (exercise.sets) {
+                                exercise.sets.forEach((set, index) => {
+                                    csvContent += `${date},"${dayEntry.dayName}","${exercise.name}",${set.set || (index+1)},${set.weight || ''},${set.reps || ''},${set.hold || ''},${set.duration || ''},"${set.notes || (set.completed !== undefined ? (set.completed ? 'Completed' : 'Not Done') : '')}"\n`;
+                                });
+                            }
+                        });
+                    }
                 });
             });
 
@@ -964,13 +1163,13 @@
                 link.click();
                 document.body.removeChild(link);
             } else {
-                alert("CSV export not supported by this browser.");
+                 alert("CSV export not supported by this browser.");
             }
         }
         
         function generateCalendar() {
             const calendarView = document.getElementById('monthly-calendar-view');
-            const workoutLog = JSON.parse(localStorage.getItem('workoutLogV3')) || {};
+            const workoutLog = JSON.parse(localStorage.getItem('workoutLogV4')) || {};
             if (!calendarView) return;
             calendarView.innerHTML = ''; 
 
@@ -1005,7 +1204,7 @@
                     dayCell.classList.add('workout-complete');
                     let workoutTitles = [];
                      Object.values(workoutLog[dateStr]).forEach(dayLog => {
-                        workoutTitles.push(dayLog.dayName);
+                        if(dayLog && dayLog.dayName) workoutTitles.push(dayLog.dayName);
                     });
                     dayCell.title = "Logged: " + workoutTitles.join('; ');
                 }
@@ -1025,10 +1224,22 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            showTab('workout', document.querySelector('.nav-tab.active'));
-            showDay(1, document.querySelector('.day-btn.active'));
-            showWeek(1, document.querySelector('.week-btn.active'));
-            updateProgressTable();
+            // Set initial active tab and day
+            showTab('workout', document.querySelector('.nav-tab[onclick*="workout"]'));
+            
+            const initialActiveDayButton = document.querySelector('.day-btn.active') || document.querySelector('.day-btn'); // Fallback to first day button
+            if(initialActiveDayButton){
+                // Simulate a click to trigger showDay and populateDayInputs correctly
+                initialActiveDayButton.click(); 
+            } else { // If no day buttons, at least try to populate Day 1 if it's active
+                const activeDayCard = document.querySelector('.day-card.active');
+                 if (activeDayCard) {
+                    populateDayInputs(activeDayCard.id);
+                }
+            }
+            
+            showWeek(1, document.querySelector('.week-btn.active')); // Activate default week
+            updateProgressTable(); // Initial load for progress tab data
 
             if (typeof Chart === 'undefined') {
                 console.warn('Chart.js not loaded. Charts will not be displayed.');
@@ -1037,3 +1248,4 @@
     </script>
 </body>
 </html>
+```
